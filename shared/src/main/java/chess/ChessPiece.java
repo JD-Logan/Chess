@@ -59,6 +59,31 @@ public class ChessPiece {
             return List.of(new ChessMove(new ChessPosition(5,4), new ChessPosition(1,8), null)); // hardcoded
         }
         return List.of();
+        // idea
+        if (this.type != PieceType.BISHOP) {
+            return List.of();
+        }
+
+        List<ChessMove> moves = new ArrayList<>();
+        int startRow = myPosition.getRow();
+        int startCol = myPosition.getColumn();
+
+        // up-right diaganol
+        int row = startRow + 1;
+        int col = startCol + 1;
+        while (row <= 8 && col <=8) {
+            ChessPosition newPos = new ChessPosition(row, col);
+            ChessPiece pieceAtPos = board.getPiece(newPos);
+
+            if (pieceAtPos == null) {
+                moves.add(new ChessMove(myPosition, newPos, null)); // empty spot
+            } else if (pieceAtPos.getTeamColor() != this.pieceColor) {
+                moves.add(new ChessMove(myPosition, newPos, null)); // enemy piexe
+                break;
+            } else {
+                break; // Same team piece
+            }
+        }
     }
 
     @Override
