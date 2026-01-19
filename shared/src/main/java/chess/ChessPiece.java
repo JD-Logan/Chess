@@ -215,9 +215,44 @@ public class ChessPiece {
                 col--;
             }
             return moves;
+
+            // QUEEN
+        } else if (this.type == PieceType.QUEEN) {
+            List<ChessMove> moves = new ArrayList<>();
+            addMovesInDirections(board, myPosition, moves, 1, 0); // UP
+            addMovesInDirections(board, myPosition, moves, -1, 0); // DOWN
+            addMovesInDirections(board, myPosition, moves, 0, -1); // LEFT
+            addMovesInDirections(board, myPosition, moves, 0, 1); // RIGHT
+            addMovesInDirections(board, myPosition, moves, 1, 1); // UP-RIGHT
+            addMovesInDirections(board, myPosition, moves, -1, 1); // UP-LEFT
+            addMovesInDirections(board, myPosition, moves, 1, -1); // DOWN-RIGHT
+            addMovesInDirections(board, myPosition, moves, -1, -1); // DOWN-LEFT
+
+            return moves;
         }
         else {
             return List.of();
+        }
+    }
+
+    private void addMovesInDirections(ChessBoard board, ChessPosition myPosition, List<ChessMove> moves, int rowChange, int colChange) {
+        int row = myPosition.getRow() + rowChange;
+        int col = myPosition.getColumn() + colChange;
+
+        while (row >=1 && row <=8 && col >=1 && col <=8) {
+            ChessPosition newPos = new ChessPosition(row,col);
+            ChessPiece pieceAtpos = board.getPiece(newPos);
+
+            if (pieceAtpos == null) {
+                moves.add(new ChessMove(myPosition, newPos, null)); // empty spot
+            } else if(pieceAtpos.getTeamColor() != this.pieceColor) {
+                moves.add(new ChessMove(myPosition, newPos, null)); // enemy piece
+                break;
+            } else {
+                break; // Same team piece
+            }
+            row += rowChange;
+            col += colChange;
         }
     }
 
