@@ -93,37 +93,98 @@ public class ChessPiece {
 
             return moves;
 
+        } else if (this.type == PieceType.KING) {
+            List<ChessMove> moves = new ArrayList<>();
+
+            singleRangeMove(board, myPosition, moves,1,-1); // UP-LEFT
+            singleRangeMove(board, myPosition, moves,1,0); // UP
+            singleRangeMove(board, myPosition, moves,1,1); // UP-RIGHT
+            singleRangeMove(board, myPosition, moves,0,-1); // LEFT
+            singleRangeMove(board, myPosition, moves,0,1); // RIGHT
+            singleRangeMove(board, myPosition, moves,-1,-1); // DOWN-LEFT
+            singleRangeMove(board, myPosition, moves,-1,0); // DOWN
+            singleRangeMove(board, myPosition, moves,-1,1); // DOWN-RIGHT
+
+            return moves;
+        } else if (this.type == PieceType.KNIGHT) {
+            List<ChessMove> moves = new ArrayList<>();
+
+            singleRangeMove(board, myPosition, moves,1,-2); // LEFT-UP
+            singleRangeMove(board, myPosition, moves,2,-1); // UP-LEFT
+            singleRangeMove(board, myPosition, moves,2,1); // UP-RIGHT
+            singleRangeMove(board, myPosition, moves,1,2); // RIGHT-UP
+            singleRangeMove(board, myPosition, moves,-1,2); // RIGHT_DOWN
+            singleRangeMove(board, myPosition, moves,-2,1); // DOWN-RIGHT
+            singleRangeMove(board, myPosition, moves,-2,-1); // DOWN-LEFT
+            singleRangeMove(board, myPosition, moves,-1,-2); // LEFT-DOWN
+
+            return moves;
+
+
             // PAWN
             // NOT COMPLETE
             // NOTE: pawns can only move one direction which is gonna make this weird because white and black need to go their ways. so set a flag for white or black to determine the direction.
             // also probably just do knight and king and do the pawn last.
         } else if (this.type == PieceType.PAWN) {
             List<ChessMove> moves = new ArrayList<>();
+//
+//            singleRangeMove(board, myPosition, moves,1,0); // UP
+//
+//            int row = myPosition.getRow();
+//            int col = myPosition.getColumn();
+//            int rowUp = row + 1;
+//            int colLeft = col - 1;
+//            int colRight = col + 1;
+//
+//            if (row>=1 && row <=8 && col >=1 && col <=8) {
+//                ChessPosition leftPos = new ChessPosition(rowUp, colLeft);
+//                ChessPiece pieceAtPos = board.getPiece(leftPos);
+//
+//                if (pieceAtPos != null && pieceAtPos.getTeamColor() != this.pieceColor) {
+//                    moves.add(new ChessMove(myPosition, leftPos, null));
+//                }
+//                ChessPosition newPos = new ChessPosition(rowUp, colRight);
+//                ChessPiece pieceAtPos2 = board.getPiece(newPos);
+//
+//                if (pieceAtPos2 != null && pieceAtPos2.getTeamColor() != this.pieceColor) {
+//                    moves.add(new ChessMove(myPosition, newPos, null));
+//                }
+//            }
 
+            // this is all kinda chopped because they have black or white
             int row = myPosition.getRow();
             int col = myPosition.getColumn();
 
-            ChessPosition newPos = new ChessPosition(row,col);
-            ChessPiece pieceAtpos = board.getPiece(newPos);
+            // the direction part of this
 
-            while (row <= 8) {
-                if (pieceAtpos == null) {
-                    moves.add(new ChessMove(myPosition, newPos, null)); // empty spot
-                } else if (pieceAtpos.getTeamColor() != this.pieceColor) {
-                    moves.add(new ChessMove(myPosition, newPos, null)); // enemy piece
-                    break;
-                } else {
-                    break; // Same team piece
+            if (row>=1 && row <=8 && col >=1 && col <=8) {
+                ChessPosition newPos = new ChessPosition(row, col);
+                ChessPiece pieceAtPos = board.getPiece(newPos);
+
+                if (pieceAtPos == null || pieceAtPos.getTeamColor() != this.pieceColor) {
+                    moves.add(new ChessMove(myPosition, newPos, null));
                 }
             }
 
-            longRangeMoves(board, myPosition, moves, 1, 0); // UP
-
-
             return moves;
-        }
-        else {
+
+        } else {
             return List.of();
+        }
+
+    }
+
+    private void singleRangeMove(ChessBoard board, ChessPosition myPosition, List<ChessMove> moves, int rowChange, int colChange) {
+        int row = myPosition.getRow() + rowChange;
+        int col = myPosition.getColumn() + colChange;
+
+        if (row>=1 && row <=8 && col >=1 && col <=8) {
+            ChessPosition newPos = new ChessPosition(row, col);
+            ChessPiece pieceAtPos = board.getPiece(newPos);
+
+            if (pieceAtPos == null || pieceAtPos.getTeamColor() != this.pieceColor) {
+                moves.add(new ChessMove(myPosition, newPos, null));
+            }
         }
     }
 
