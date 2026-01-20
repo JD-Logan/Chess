@@ -156,15 +156,46 @@ public class ChessPiece {
             int col = myPosition.getColumn();
 
             // the direction part of this
+            int teamDirection = (this.pieceColor == ChessGame.TeamColor.WHITE) ? 1 : -1;
+            int pawnFirstMove = (this.pieceColor == ChessGame.TeamColor.WHITE) ? 2 : 7;
 
-            if (row>=1 && row <=8 && col >=1 && col <=8) {
-                ChessPosition newPos = new ChessPosition(row, col);
-                ChessPiece pieceAtPos = board.getPiece(newPos);
+            int rowAhead = row + teamDirection;
 
-                if (pieceAtPos == null || pieceAtPos.getTeamColor() != this.pieceColor) {
-                    moves.add(new ChessMove(myPosition, newPos, null));
+            if (rowAhead >= 1 && rowAhead <= 8) {
+                ChessPosition aheadPos = new ChessPosition(rowAhead, col);
+                ChessPiece pieceAtAheadPos = board.getPiece(aheadPos);
+
+                if (pieceAtAheadPos == null) {
+                    moves.add(new ChessMove(myPosition, aheadPos, null));
+
+                    // first move double space move
+                    if (row == pawnFirstMove) {
+                    int twoRowAhead = row + (2 * teamDirection);
+                    ChessPosition twoAheadPos = new ChessPosition(twoRowAhead, col);
+                    ChessPiece pieceTwoAhead = board.getPiece(twoAheadPos);
+
+                        if (pieceTwoAhead == null) {
+                            moves.add(new ChessMove(myPosition, twoAheadPos, null));
+                        }
+                    }
                 }
             }
+            // diagonal capture
+            List<Integer> diagonalCapture = List.of(-1,1);
+            for (int i = 0; i < diagonalCapture.size(); i++) {
+                int captureCol = col + diagonalCapture.get(i);
+
+                if (rowAhead >=1 && rowAhead <=8 && captureCol >=1 && captureCol <=8) {
+                    ChessPosition capturePos = new ChessPosition(rowAhead, captureCol);
+                    ChessPiece pieceAtPos = board.getPiece(capturePos);
+
+                    if (pieceAtPos != null && pieceAtPos.getTeamColor() != this.pieceColor) {
+                        moves.add(new ChessMove(myPosition, capturePos, null));
+                    }
+                }
+            }
+
+
 
             return moves;
 
