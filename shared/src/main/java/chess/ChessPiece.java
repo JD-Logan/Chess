@@ -127,31 +127,7 @@ public class ChessPiece {
             // also probably just do knight and king and do the pawn last.
         } else if (this.type == PieceType.PAWN) {
             List<ChessMove> moves = new ArrayList<>();
-//
-//            singleRangeMove(board, myPosition, moves,1,0); // UP
-//
-//            int row = myPosition.getRow();
-//            int col = myPosition.getColumn();
-//            int rowUp = row + 1;
-//            int colLeft = col - 1;
-//            int colRight = col + 1;
-//
-//            if (row>=1 && row <=8 && col >=1 && col <=8) {
-//                ChessPosition leftPos = new ChessPosition(rowUp, colLeft);
-//                ChessPiece pieceAtPos = board.getPiece(leftPos);
-//
-//                if (pieceAtPos != null && pieceAtPos.getTeamColor() != this.pieceColor) {
-//                    moves.add(new ChessMove(myPosition, leftPos, null));
-//                }
-//                ChessPosition newPos = new ChessPosition(rowUp, colRight);
-//                ChessPiece pieceAtPos2 = board.getPiece(newPos);
-//
-//                if (pieceAtPos2 != null && pieceAtPos2.getTeamColor() != this.pieceColor) {
-//                    moves.add(new ChessMove(myPosition, newPos, null));
-//                }
-//            }
 
-            // this is all kinda chopped because they have black or white
             int row = myPosition.getRow();
             int col = myPosition.getColumn();
 
@@ -166,7 +142,15 @@ public class ChessPiece {
                 ChessPiece pieceAtAheadPos = board.getPiece(aheadPos);
 
                 if (pieceAtAheadPos == null) {
-                    moves.add(new ChessMove(myPosition, aheadPos, null));
+                    // Promotions
+                    if (rowAhead == 8 || rowAhead == 1) {
+                        moves.add(new ChessMove(myPosition, aheadPos, PieceType.QUEEN));
+                        moves.add(new ChessMove(myPosition, aheadPos, PieceType.ROOK));
+                        moves.add(new ChessMove(myPosition, aheadPos, PieceType.BISHOP));
+                        moves.add(new ChessMove(myPosition, aheadPos, PieceType.KNIGHT));
+                    } else {
+                        moves.add(new ChessMove(myPosition, aheadPos, null));
+                    }
 
                     // first move double space move
                     if (row == pawnFirstMove) {
@@ -190,8 +174,17 @@ public class ChessPiece {
                     ChessPiece pieceAtPos = board.getPiece(capturePos);
 
                     if (pieceAtPos != null && pieceAtPos.getTeamColor() != this.pieceColor) {
-                        moves.add(new ChessMove(myPosition, capturePos, null));
+
+                        if (rowAhead == 8 || rowAhead == 1) {
+                            moves.add(new ChessMove(myPosition, capturePos, PieceType.QUEEN));
+                            moves.add(new ChessMove(myPosition, capturePos, PieceType.ROOK));
+                            moves.add(new ChessMove(myPosition, capturePos, PieceType.BISHOP));
+                            moves.add(new ChessMove(myPosition, capturePos, PieceType.KNIGHT));
+                        } else {
+                            moves.add(new ChessMove(myPosition, capturePos, null));
+                        }
                     }
+
                 }
             }
 
