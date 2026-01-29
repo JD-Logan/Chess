@@ -1,6 +1,8 @@
 package chess;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -75,8 +77,42 @@ public class ChessGame {
      * @return True if the specified team is in check
      */
     public boolean isInCheck(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+        ChessPosition kingPosition = scanForKing(teamColor);
+
+        TeamColor opponentsColor = (teamColor == TeamColor.WHITE) ? TeamColor.BLACK : TeamColor.WHITE;
+
+        List<ChessMove> opponentsMoves = new ArrayList<>();
+
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPosition newPos = new ChessPosition(row, col);
+                ChessPiece pieceAtPos = board.getPiece(newPos);
+                // FINISH THIS> START HERE
+            }
+        }
+
+
+        return true;
         // Returns true if the specified team’s King could be captured by an opposing piece
+        // isInCheck:
+        //- plan:
+        //  - scan the board for the king
+        //  - get all the piece moves for the opponents pieces
+        //  - if any of the moves captures the kings position, return true
+    }
+
+    private ChessPosition scanForKing(TeamColor teamColor) {
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPosition newPos = new ChessPosition(row, col);
+                ChessPiece pieceAtPos = board.getPiece(newPos);
+
+                if (pieceAtPos != null && pieceAtPos.getPieceType() == ChessPiece.PieceType.KING && pieceAtPos.getTeamColor() == teamColor) {
+                    return newPos;
+                }
+            }
+        }
+        return null;
     }
 
     /**
