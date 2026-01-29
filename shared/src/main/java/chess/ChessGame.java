@@ -81,24 +81,27 @@ public class ChessGame {
 
         TeamColor opponentsColor = (teamColor == TeamColor.WHITE) ? TeamColor.BLACK : TeamColor.WHITE;
 
-        List<ChessMove> opponentsMoves = new ArrayList<>();
-
+        // iterate through board to get all piece moves
         for (int row = 1; row <= 8; row++) {
             for (int col = 1; col <= 8; col++) {
                 ChessPosition newPos = new ChessPosition(row, col);
                 ChessPiece pieceAtPos = board.getPiece(newPos);
-                // FINISH THIS> START HERE
+
+                // if enemy piece, get all its moves
+                if (pieceAtPos != null && pieceAtPos.getTeamColor() == opponentsColor) {
+                    Collection<ChessMove> opponentsMoves = pieceAtPos.pieceMoves(board, newPos); // all moves from piece
+
+                    // iterate through moves, if endPosition is kingPosition, return true
+                    for (ChessMove move : opponentsMoves) {
+                        if (move.getEndPosition().equals(kingPosition)) {
+                            return true;
+                        }
+                    }
+                }
             }
         }
-
-
-        return true;
-        // Returns true if the specified team’s King could be captured by an opposing piece
-        // isInCheck:
-        //- plan:
-        //  - scan the board for the king
-        //  - get all the piece moves for the opponents pieces
-        //  - if any of the moves captures the kings position, return true
+        // no enemy moves have end position == kingPosition
+        return false;
     }
 
     private ChessPosition scanForKing(TeamColor teamColor) {
