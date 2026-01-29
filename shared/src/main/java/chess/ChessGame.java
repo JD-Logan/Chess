@@ -54,8 +54,57 @@ public class ChessGame {
      * startPosition
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
-        throw new RuntimeException("Not implemented");
+
+        // get piece at startPosition
+        ChessPiece pieceAtPos = board.getPiece(startPosition);
+        if (pieceAtPos == null) {
+            return null;
+        }
+
+        // call piece.pieceMoves
+        Collection<ChessMove> validMoves = new ArrayList<>();
+        Collection<ChessMove> pieceAtPosMoves = pieceAtPos.pieceMoves(board, startPosition);
+        TeamColor pieceColor = pieceAtPos.getTeamColor();
+
+        // iterate through those moves and use isInCheck to filter out invalid moves
+        for (ChessMove move : pieceAtPosMoves) {
+            // clone board to make move
+            ChessBoard copiedBoard = cloneBoard(this.board);
+
+            ChessPiece playPiece = copiedBoard.getPiece(move.getStartPosition());
+            copiedBoard.addPiece(move.getStartPosition(), null);
+            copiedBoard.addPiece(move.getEndPosition(), playPiece);
+
+            if (!isInCheck(pieceColor, copiedBoard)) {
+                // I need to change the parameters of isInCheck. is that legal with the autograder?
+                validMoves.add(move);
+            }
+        }
+
+        return validMoves;
+        //validMoves:
+        //- plan:
+        //  - get piece at startPosition
+        //  - call piece.pieceMoves and use isInCheck to filter out invalid moves
+        //    - maybe copy the board for each move? if king is not in check after move, keep the move
         // is a piece move AND the move doesn't leave your king in check
+    }
+
+    private ChessBoard cloneBoard(ChessBoard board) {
+        ChessBoard copyBoard = new ChessBoard();
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPosition pos = new ChessPosition(row, col);
+                ChessPiece pieceAtPos = board.getPiece(pos);
+
+                if (pieceAtPos != null) {
+                    ChessPiece copyPiece = new ChessPiece(pieceAtPos.getTeamColor(), pieceAtPos.getPieceType());
+                    copyBoard.addPiece(pos, copyPiece);
+                }
+            }
+        }
+
+        return copyBoard;
     }
 
     /**
@@ -65,7 +114,7 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
-        throw new RuntimeException("Not implemented");
+        Collection<ChessMove> moves = new ArrayList<>();
         // Receives a given move and executes it, provided it is a legal move. If the move is illegal, it throws an InvalidMoveException.
         // A move is illegal if it is not a "valid" move for the piece at the starting location, or if it’s not the corresponding team's turn.
     }
@@ -76,8 +125,13 @@ public class ChessGame {
      * @param teamColor which team to check for check
      * @return True if the specified team is in check
      */
+
     public boolean isInCheck(TeamColor teamColor) {
-        ChessPosition kingPosition = scanForKing(teamColor);
+        return isInCheck(teamColor, this.board);
+    }
+
+    private boolean isInCheck(TeamColor teamColor, ChessBoard checkingBoard) {
+        ChessPosition kingPosition = scanForKing(teamColor, checkingBoard);
 
         TeamColor opponentsColor = (teamColor == TeamColor.WHITE) ? TeamColor.BLACK : TeamColor.WHITE;
 
@@ -85,11 +139,11 @@ public class ChessGame {
         for (int row = 1; row <= 8; row++) {
             for (int col = 1; col <= 8; col++) {
                 ChessPosition newPos = new ChessPosition(row, col);
-                ChessPiece pieceAtPos = board.getPiece(newPos);
+                ChessPiece pieceAtPos = checkingBoard.getPiece(newPos);
 
                 // if enemy piece, get all its moves
                 if (pieceAtPos != null && pieceAtPos.getTeamColor() == opponentsColor) {
-                    Collection<ChessMove> opponentsMoves = pieceAtPos.pieceMoves(board, newPos); // all moves from piece
+                    Collection<ChessMove> opponentsMoves = pieceAtPos.pieceMoves(checkingBoard, newPos); // all moves from piece
 
                     // iterate through moves, if endPosition is kingPosition, return true
                     for (ChessMove move : opponentsMoves) {
@@ -104,11 +158,11 @@ public class ChessGame {
         return false;
     }
 
-    private ChessPosition scanForKing(TeamColor teamColor) {
+    private ChessPosition scanForKing(TeamColor teamColor, ChessBoard scanBoard) {
         for (int row = 1; row <= 8; row++) {
             for (int col = 1; col <= 8; col++) {
                 ChessPosition newPos = new ChessPosition(row, col);
-                ChessPiece pieceAtPos = board.getPiece(newPos);
+                ChessPiece pieceAtPos = scanBoard.getPiece(newPos);
 
                 if (pieceAtPos != null && pieceAtPos.getPieceType() == ChessPiece.PieceType.KING && pieceAtPos.getTeamColor() == teamColor) {
                     return newPos;
@@ -125,7 +179,7 @@ public class ChessGame {
      * @return True if the specified team is in checkmate
      */
     public boolean isInCheckmate(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+        return false;
         // Returns true if the given team has no way to protect their king from being captured.
     }
 
@@ -137,7 +191,7 @@ public class ChessGame {
      * @return True if the specified team is in stalemate, otherwise false
      */
     public boolean isInStalemate(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+        return false;
         // Returns true if the given team has no legal moves but their king is not in immediate danger.
     }
 
