@@ -114,6 +114,7 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
+        Collection<ChessMove> validMoves = validMoves(move.getStartPosition());
 
         ChessPiece piece = board.getPiece(move.getStartPosition());
 
@@ -121,9 +122,30 @@ public class ChessGame {
             throw new InvalidMoveException("There is no piece there");
         }
 
+        if (piece.getTeamColor() != teamTurn) {
+            throw new InvalidMoveException("Not your turn!!!");
+        }
+
+        // bad way to check if the move is invalid due to check
+//        if (isInCheck(teamTurn)) {
+//            throw new InvalidMoveException("you are in check but i dont know if that move fixes it");
+//        }
+
+
+        if (!validMoves.contains(move)) {
+            throw new InvalidMoveException("That's an invalid move");
+        }
+
         board.addPiece(move.getStartPosition(), null);
 
-        board.addPiece(move.getEndPosition(), piece);
+        if (move.getPromotionPiece() != null) {
+            ChessPiece pawnPromotion = new ChessPiece(piece.getTeamColor(), move.getPromotionPiece());
+            board.addPiece(move.getEndPosition(), pawnPromotion);
+        } else {
+            board.addPiece(move.getEndPosition(), piece);
+        }
+
+        teamTurn = (this.teamTurn == TeamColor.WHITE) ? TeamColor.BLACK : TeamColor.WHITE;
 
         // makeMove:
         //- check if the piece color is the correct teams turn
