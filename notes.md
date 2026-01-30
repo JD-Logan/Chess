@@ -50,7 +50,7 @@ isInStalemate:
 - if in check already, return false
 - get all same teams pieces
 - run validMoves on pieces
-- if any moves exist, reutrn false
+- if any moves exist, return false
 - if not in check and no moves, return true
 
 
@@ -60,3 +60,9 @@ scanForKing
 simulateBoardMove
 - leavesKingInCheck (maybe different maybe not)
 getTeamsPieces
+
+
+
+What's working:
+isInCheck / Check
+validMoves / creating valid moves list
