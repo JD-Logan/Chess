@@ -159,7 +159,11 @@ public class ChessGame {
         return false;
     }
 
-    private static boolean placeKingInCheck(ChessBoard checkingBoard, ChessPiece pieceAtPos, TeamColor opponentsColor, ChessPosition newPos, ChessPosition kingPosition) {
+    private static boolean placeKingInCheck(ChessBoard checkingBoard,
+                                            ChessPiece pieceAtPos,
+                                            TeamColor opponentsColor,
+                                            ChessPosition newPos,
+                                            ChessPosition kingPosition) {
         if (pieceAtPos != null && pieceAtPos.getTeamColor() == opponentsColor) {
             Collection<ChessMove> opponentsMoves = pieceAtPos.pieceMoves(checkingBoard, newPos);
 
