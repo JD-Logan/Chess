@@ -80,7 +80,7 @@ public class ChessGame {
 
     private ChessBoard cloneBoard(ChessBoard board) {
         ChessBoard copyBoard = new ChessBoard();
-        for (int row = 1; row <= 8; row++)
+        for (int row = 1; row <= 8; row++) {
             for (int col = 1; col <= 8; col++) {
                 ChessPosition pos = new ChessPosition(row, col);
                 ChessPiece pieceAtPos = board.getPiece(pos);
@@ -90,6 +90,7 @@ public class ChessGame {
                     copyBoard.addPiece(pos, copyPiece);
                 }
             }
+        }
         return copyBoard;
     }
 
@@ -144,7 +145,7 @@ public class ChessGame {
 
         TeamColor opponentsColor = (teamColor == TeamColor.WHITE) ? TeamColor.BLACK : TeamColor.WHITE;
 
-        for (int row = 1; row <= 8; row++)
+        for (int row = 1; row <= 8; row++) {
             for (int col = 1; col <= 8; col++) {
                 ChessPosition newPos = new ChessPosition(row, col);
                 ChessPiece pieceAtPos = checkingBoard.getPiece(newPos);
@@ -159,6 +160,7 @@ public class ChessGame {
                     }
                 }
             }
+        }
         return false;
     }
 

@@ -132,8 +132,9 @@ public class ChessPiece {
                         ChessPosition newPos = new ChessPosition(rowAhead, capCol);
                         ChessPiece pieceAtPos = board.getPiece(newPos);
 
-                        if (pieceAtPos != null && pieceAtPos.getTeamColor() != this.pieceColor)
+                        if (pieceAtPos != null && pieceAtPos.getTeamColor() != this.pieceColor) {
                             promotePawn(myPosition, moves, rowAhead, newPos);
+                        }
                     }
                 }
             }
