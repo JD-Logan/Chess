@@ -221,9 +221,41 @@ public class ChessGame {
      * @return True if the specified team is in checkmate
      */
     public boolean isInCheckmate(TeamColor teamColor) {
-        return false;
+        if (!isInCheck(teamColor)) {
+            return false;
+        } else {
+
+//            TeamColor opponentsColor = (teamColor == TeamColor.WHITE) ? TeamColor.BLACK : TeamColor.WHITE;
+            // this teams color
+
+            // iterate through board to get all piece moves
+            for (int row = 1; row <= 8; row++) {
+                for (int col = 1; col <= 8; col++) {
+                    ChessPosition newPos = new ChessPosition(row, col);
+                    ChessPiece pieceAtPos = this.board.getPiece(newPos);
+
+                    // if friendly piece, get all its valid moves
+                    if (pieceAtPos != null && pieceAtPos.getTeamColor() == teamColor) {
+                        Collection<ChessMove> validMoves = validMoves(newPos); // all valid moves from piece
+
+                        if (validMoves != null && !validMoves.isEmpty()) {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+
+        return true;
+//        return isInCheckmate(teamColor, this.board);
         // Returns true if the given team has no way to protect their king from being captured.
     }
+
+//    private boolean isInCheckmate(TeamColor teamColor, ChessBoard checkingBoard) {
+//
+//
+//        return false;
+//    }
 
     /**
      * Determines if the given team is in stalemate, which here is defined as having
@@ -233,7 +265,34 @@ public class ChessGame {
      * @return True if the specified team is in stalemate, otherwise false
      */
     public boolean isInStalemate(TeamColor teamColor) {
-        return false;
+        // same as isInCheckmate except I deleted the ! in the first if statement.
+
+        if (isInCheck(teamColor)) {
+            return false;
+        } else {
+
+//            TeamColor opponentsColor = (teamColor == TeamColor.WHITE) ? TeamColor.BLACK : TeamColor.WHITE;
+            // this teams color
+
+            // iterate through board to get all piece moves
+            for (int row = 1; row <= 8; row++) {
+                for (int col = 1; col <= 8; col++) {
+                    ChessPosition newPos = new ChessPosition(row, col);
+                    ChessPiece pieceAtPos = this.board.getPiece(newPos);
+
+                    // if friendly piece, get all its valid moves
+                    if (pieceAtPos != null && pieceAtPos.getTeamColor() == teamColor) {
+                        Collection<ChessMove> validMoves = validMoves(newPos); // all valid moves from piece
+
+                        if (validMoves != null && !validMoves.isEmpty()) {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        return true;
+//        return isInCheckmate(teamColor, this.board);
         // Returns true if the given team has no legal moves but their king is not in immediate danger.
     }
 
