@@ -101,48 +101,52 @@ public class ChessPiece {
                 singleRangeMove(board, myPosition, moves, -1, 2);
             }
             case PAWN -> {
-                int teamDirection = (ChessGame.TeamColor.WHITE == this.pieceColor) ? 1 : -1;
-                int pawnFirstMove = (ChessGame.TeamColor.WHITE == this.pieceColor) ? 2 : 7;
-
-                int rowAhead = myPosition.getRow() + teamDirection;
-                int col = myPosition.getColumn();
-
-                if (rowAhead >= 1 && rowAhead <= 8 && col >= 1 && col <= 8) {
-                    ChessPosition posAhead = new ChessPosition(rowAhead, col);
-                    ChessPiece pieceAtPosAhead = board.getPiece(posAhead);
-
-                    if (pieceAtPosAhead == null) {
-                        promotePawn(myPosition, moves, rowAhead, posAhead);
-                        if (myPosition.getRow() == pawnFirstMove) {
-                            ChessPosition posTwoAhead = new ChessPosition(rowAhead + teamDirection, col);
-                            ChessPiece pieceAtTwoAhead = board.getPiece(posTwoAhead);
-
-                            if (pieceAtTwoAhead == null) {
-                                moves.add(new ChessMove(myPosition, posTwoAhead, null));
-                            }
-                        }
-                    }
-                }
-
-                List<Integer> diagonalCapture = List.of(-1, 1);
-                for (Integer integer : diagonalCapture) {
-                    int capCol = col + integer;
-
-                    if (rowAhead >= 1 && rowAhead <= 8 && capCol >= 1 && capCol <= 8) {
-                        ChessPosition newPos = new ChessPosition(rowAhead, capCol);
-                        ChessPiece pieceAtPos = board.getPiece(newPos);
-
-                        if (pieceAtPos != null && pieceAtPos.getTeamColor() != this.pieceColor) {
-                            promotePawn(myPosition, moves, rowAhead, newPos);
-                        }
-                    }
-                }
+                pawnMoves(board, myPosition, moves);
             }
             case null, default -> {
             }
         }
 
         return moves;
+    }
+
+    private void pawnMoves(ChessBoard board, ChessPosition myPosition, List<ChessMove> moves) {
+        int teamDirection = (ChessGame.TeamColor.WHITE == this.pieceColor) ? 1 : -1;
+        int pawnFirstMove = (ChessGame.TeamColor.WHITE == this.pieceColor) ? 2 : 7;
+
+        int rowAhead = myPosition.getRow() + teamDirection;
+        int col = myPosition.getColumn();
+
+        if (rowAhead >= 1 && rowAhead <= 8 && col >= 1 && col <= 8) {
+            ChessPosition posAhead = new ChessPosition(rowAhead, col);
+            ChessPiece pieceAtPosAhead = board.getPiece(posAhead);
+
+            if (pieceAtPosAhead == null) {
+                promotePawn(myPosition, moves, rowAhead, posAhead);
+                if (myPosition.getRow() == pawnFirstMove) {
+                    ChessPosition posTwoAhead = new ChessPosition(rowAhead + teamDirection, col);
+                    ChessPiece pieceAtTwoAhead = board.getPiece(posTwoAhead);
+
+                    if (pieceAtTwoAhead == null) {
+                        moves.add(new ChessMove(myPosition, posTwoAhead, null));
+                    }
+                }
+            }
+        }
+
+        List<Integer> diagonalCapture = List.of(-1, 1);
+        for (Integer integer : diagonalCapture) {
+            int capCol = col + integer;
+
+            if (rowAhead >= 1 && rowAhead <= 8 && capCol >= 1 && capCol <= 8) {
+                ChessPosition newPos = new ChessPosition(rowAhead, capCol);
+                ChessPiece pieceAtPos = board.getPiece(newPos);
+
+                if (pieceAtPos != null && pieceAtPos.getTeamColor() != this.pieceColor) {
+                    promotePawn(myPosition, moves, rowAhead, newPos);
+                }
+            }
+        }
     }
 
     private void promotePawn(ChessPosition myPosition, List<ChessMove> moves, int rowAhead, ChessPosition newPos) {

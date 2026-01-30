@@ -2,6 +2,7 @@ package chess;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Objects;
 
 /**
@@ -150,14 +151,21 @@ public class ChessGame {
                 ChessPosition newPos = new ChessPosition(row, col);
                 ChessPiece pieceAtPos = checkingBoard.getPiece(newPos);
 
-                if (pieceAtPos != null && pieceAtPos.getTeamColor() == opponentsColor) {
-                    Collection<ChessMove> opponentsMoves = pieceAtPos.pieceMoves(checkingBoard, newPos);
+                if (placeKingInCheck(checkingBoard, pieceAtPos, opponentsColor, newPos, kingPosition)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
-                    for (ChessMove move : opponentsMoves) {
-                        if (move.getEndPosition().equals(kingPosition)) {
-                            return true;
-                        }
-                    }
+    private static boolean placeKingInCheck(ChessBoard checkingBoard, ChessPiece pieceAtPos, TeamColor opponentsColor, ChessPosition newPos, ChessPosition kingPosition) {
+        if (pieceAtPos != null && pieceAtPos.getTeamColor() == opponentsColor) {
+            Collection<ChessMove> opponentsMoves = pieceAtPos.pieceMoves(checkingBoard, newPos);
+
+            for (ChessMove move : opponentsMoves) {
+                if (move.getEndPosition().equals(kingPosition)) {
+                    return true;
                 }
             }
         }
@@ -170,7 +178,9 @@ public class ChessGame {
                 ChessPosition newPos = new ChessPosition(row, col);
                 ChessPiece pieceAtPos = scanBoard.getPiece(newPos);
 
-                if (pieceAtPos != null && pieceAtPos.getPieceType() == ChessPiece.PieceType.KING && pieceAtPos.getTeamColor() == teamColor) {
+                if (pieceAtPos != null
+                        && pieceAtPos.getPieceType() == ChessPiece.PieceType.KING
+                        && pieceAtPos.getTeamColor() == teamColor) {
                     return newPos;
                 }
             }
