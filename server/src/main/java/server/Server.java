@@ -3,6 +3,8 @@ package server;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import dataaccess.MemoryDataAccess;
+import model.AuthData;
+import model.UserData;
 import org.jetbrains.annotations.NotNull;
 import service.ClearService;
 import service.GameService;
@@ -66,28 +68,74 @@ public class Server {
     }
 
     private void handleRegister(Context context) {
-
+        try {
+            UserData request = gson.fromJson(context.body(), UserData.class);
+            AuthData auth = userService.register(request);
+            context.result(gson.toJson(Map.of(
+                    "username", auth.username(),
+                    "authToken", auth.authToken()
+            )));
+        } catch (IllegalArgumentException e) {
+            context.status(400);
+            context.result(gson.toJson(Map.of("message", "Error: bad request")));
+        } catch (IllegalStateException e) {
+            context.status(403);
+            context.result(gson.toJson(Map.of("message", "error: already taken")));
+        } catch (DataAccessException e) {
+            context.status(500);
+            context.result(gson.toJson(Map.of("message", "Error: " + e.getMessage())));
+        }
     }
 
     private void handleLogin(Context context) {
-        
-    }
+        try {
+
+        } catch {
+
+        } catch (DataAccessException e) {
+            context.status(500);
+            context.result(gson.toJson(Map.of("message", "Error: " + e.getMessage())));
+        }
 
     private void handleLogout(Context context) {
+        try {
 
-    }
+        } catch {
+
+        } catch (DataAccessException e) {
+            context.status(500);
+            context.result(gson.toJson(Map.of("message", "Error: " + e.getMessage())));
+        }
 
     private void handleListGames(Context context) {
+        try {
 
-    }
+        } catch {
+
+        } catch (DataAccessException e) {
+            context.status(500);
+            context.result(gson.toJson(Map.of("message", "Error: " + e.getMessage())));
+        }
 
     private void handleCreateGame(Context context) {
+        try {
 
-    }
+        } catch {
+
+        } catch (DataAccessException e) {
+            context.status(500);
+            context.result(gson.toJson(Map.of("message", "Error: " + e.getMessage())));
+        }
 
     private void handleJoinGame(Context context) {
+        try {
 
-    }
+        } catch {
+
+        } catch (DataAccessException e) {
+            context.status(500);
+            context.result(gson.toJson(Map.of("message", "Error: " + e.getMessage())));
+        }
 
     public int run(int desiredPort) {
         javalin.start(desiredPort);
