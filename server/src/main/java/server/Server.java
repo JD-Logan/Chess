@@ -1,15 +1,91 @@
 package server;
 
+import dataaccess.DataAccess;
+import dataaccess.DataAccessException;
+import dataaccess.MemoryDataAccess;
+import org.jetbrains.annotations.NotNull;
+import service.ClearService;
+import service.GameService;
+import service.UserService;
 import io.javalin.*;
+import io.javalin.Javalin;
+import io.javalin.http.Context;
+import com.google.gson.Gson;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+
+import java.util.Map;
 
 public class Server {
 
     private final Javalin javalin;
+    private final DataAccess dataAccess = new MemoryDataAccess();
+    private final ClearService clearService = new ClearService(dataAccess);
+    private final UserService userService = new UserService(dataAccess);
+    private final GameService gameService = new GameService(dataAccess);
+    private final Gson gson = new Gson();
 
     public Server() {
         javalin = Javalin.create(config -> config.staticFiles.add("web"));
 
-        // Register your endpoints and exception handlers here.
+        javalin.get("/", this::serveIndex);
+        javalin.delete("/db", this::handleClear);
+        javalin.post("/user", this::handleRegister);
+        javalin.post("/session", this::handleLogin);
+        javalin.delete("/session", this::handleLogout);
+        javalin.get("/game", this::handleListGames);
+        javalin.post("/game", this::handleCreateGame);
+        javalin.put("/game", this::handleJoinGame);
+
+    }
+
+    private void serveIndex(Context context) {
+        try (InputStream is = Server.class.getClassLoader().getResourceAsStream("web/index.html")) {
+            if (is == null) {
+                context.status(500);
+                return;
+            }
+            context.contentType("text/html");
+            context.result(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            context.status(500);
+        }
+    }
+
+    private void handleClear(Context context) {
+        try {
+            clearService.clear();
+            context.status(200);
+            context.result("{}");
+        } catch (DataAccessException e) {
+            context.status(500);
+            context.result(gson.toJson(Map.of("message", "Error: " + e.getMessage())));
+        }
+    }
+
+    private void handleRegister(Context context) {
+
+    }
+
+    private void handleLogin(Context context) {
+        
+    }
+
+    private void handleLogout(Context context) {
+
+    }
+
+    private void handleListGames(Context context) {
+
+    }
+
+    private void handleCreateGame(Context context) {
+
+    }
+
+    private void handleJoinGame(Context context) {
 
     }
 
