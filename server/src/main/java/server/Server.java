@@ -89,53 +89,75 @@ public class Server {
 
     private void handleLogin(Context context) {
         try {
-
-        } catch {
-
-        } catch (DataAccessException e) {
+            UserData request = gson.fromJson(context.body(), UserData.class);
+            AuthData auth = userService.register(request);
+            context.result(gson.toJson(Map.of(
+                    "username", auth.username(),
+                    "authToken", auth.authToken()
+            )));
+        } catch (IllegalArgumentException e) {
+            context.status(400);
+        } catch (SecurityException e) {
+            context.status(401);
+            context.result(gson.toJson(Map.of("message", "Error: unauthorized")));
+        } catch(DataAccessException e){
             context.status(500);
             context.result(gson.toJson(Map.of("message", "Error: " + e.getMessage())));
         }
+    }
 
     private void handleLogout(Context context) {
         try {
-
-        } catch {
-
-        } catch (DataAccessException e) {
+            UserData request = gson.fromJson(context.body(), UserData.class);
+            AuthData auth = userService.register(request);
+            context.result(gson.toJson(Map.of(
+                    "username", auth.username(),
+                    "authToken", auth.authToken()
+            )));
+        } catch (IllegalArgumentException e) {
+            context.status(400);
+            context.result(gson.toJson(Map.of("message", "Error: bad request")));
+        } catch(DataAccessException e){
             context.status(500);
             context.result(gson.toJson(Map.of("message", "Error: " + e.getMessage())));
         }
+    }
 
     private void handleListGames(Context context) {
         try {
 
-        } catch {
-
+        } catch (IllegalArgumentException e) {
+            context.status(400);
+            context.result(gson.toJson(Map.of("message", "Error: bad request")));
         } catch (DataAccessException e) {
             context.status(500);
             context.result(gson.toJson(Map.of("message", "Error: " + e.getMessage())));
         }
+    }
 
     private void handleCreateGame(Context context) {
         try {
 
-        } catch {
-
+        } catch (IllegalArgumentException e) {
+            context.status(400);
+            context.result(gson.toJson(Map.of("message", "Error: bad request")));
         } catch (DataAccessException e) {
             context.status(500);
             context.result(gson.toJson(Map.of("message", "Error: " + e.getMessage())));
         }
+    }
 
     private void handleJoinGame(Context context) {
         try {
 
-        } catch {
-
+        } catch (IllegalArgumentException e) {
+            context.status(400);
+            context.result(gson.toJson(Map.of("message", "Error: bad request")));
         } catch (DataAccessException e) {
             context.status(500);
             context.result(gson.toJson(Map.of("message", "Error: " + e.getMessage())));
         }
+    }
 
     public int run(int desiredPort) {
         javalin.start(desiredPort);
