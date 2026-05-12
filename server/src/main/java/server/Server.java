@@ -4,6 +4,7 @@ import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import dataaccess.MemoryDataAccess;
 import model.AuthData;
+import model.GameData;
 import model.UserData;
 import org.jetbrains.annotations.NotNull;
 import service.ClearService;
@@ -18,7 +19,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
+import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 
 public class Server {
 
@@ -80,7 +83,7 @@ public class Server {
             context.result(gson.toJson(Map.of("message", "Error: bad request")));
         } catch (IllegalStateException e) {
             context.status(403);
-            context.result(gson.toJson(Map.of("message", "error: already taken")));
+            context.result(gson.toJson(Map.of("message", "Error: already taken")));
         } catch (DataAccessException e) {
             context.status(500);
             context.result(gson.toJson(Map.of("message", "Error: " + e.getMessage())));
@@ -90,13 +93,14 @@ public class Server {
     private void handleLogin(Context context) {
         try {
             UserData request = gson.fromJson(context.body(), UserData.class);
-            AuthData auth = userService.register(request);
+            AuthData auth = userService.login(request.username(), request.password());
             context.result(gson.toJson(Map.of(
                     "username", auth.username(),
                     "authToken", auth.authToken()
             )));
         } catch (IllegalArgumentException e) {
             context.status(400);
+            context.result(gson.toJson(Map.of("message", "Error: bad request")));
         } catch (SecurityException e) {
             context.status(401);
             context.result(gson.toJson(Map.of("message", "Error: unauthorized")));
@@ -108,15 +112,13 @@ public class Server {
 
     private void handleLogout(Context context) {
         try {
-            UserData request = gson.fromJson(context.body(), UserData.class);
-            AuthData auth = userService.register(request);
-            context.result(gson.toJson(Map.of(
-                    "username", auth.username(),
-                    "authToken", auth.authToken()
-            )));
-        } catch (IllegalArgumentException e) {
-            context.status(400);
-            context.result(gson.toJson(Map.of("message", "Error: bad request")));
+            String authToken = context.header("authorization");
+            userService.logout(authToken);
+            context.status(200);
+            context.result("{}");
+        } catch (SecurityException e) {
+            context.status(401);
+            context.result(gson.toJson(Map.of("message", "Error: unauthorized")));
         } catch(DataAccessException e){
             context.status(500);
             context.result(gson.toJson(Map.of("message", "Error: " + e.getMessage())));
@@ -125,10 +127,13 @@ public class Server {
 
     private void handleListGames(Context context) {
         try {
+            String authToken = context.header("authorization");
+            Collection<GameData> games = gameService.listGames(authToken);
+            context.result(gson.toJson(Map.of("games", games)));
 
-        } catch (IllegalArgumentException e) {
-            context.status(400);
-            context.result(gson.toJson(Map.of("message", "Error: bad request")));
+        } catch (SecurityException e) {
+            context.status(401);
+            context.result(gson.toJson(Map.of("message", "Error: unauthorized")));
         } catch (DataAccessException e) {
             context.status(500);
             context.result(gson.toJson(Map.of("message", "Error: " + e.getMessage())));
@@ -137,10 +142,18 @@ public class Server {
 
     private void handleCreateGame(Context context) {
         try {
+            String authToken = context.header("authorization");
+            Map<String, Object> request = gson.fromJson(context.body(), Map.class);
+            String gameName = (String) request.get("gameName");
+            GameData game = gameService.createGame(authToken, gameName);
+            context.result(gson.toJson(Map.of("gameID", game.gameID())));
 
         } catch (IllegalArgumentException e) {
             context.status(400);
             context.result(gson.toJson(Map.of("message", "Error: bad request")));
+        } catch (SecurityException e) {
+            context.status(401);
+            context.result(gson.toJson(Map.of("message", "Error: unauthorized")));
         } catch (DataAccessException e) {
             context.status(500);
             context.result(gson.toJson(Map.of("message", "Error: " + e.getMessage())));
@@ -149,10 +162,24 @@ public class Server {
 
     private void handleJoinGame(Context context) {
         try {
+            String authToken = context.header("authorization");
+            Map<String, Object> request = gson.fromJson(context.body(), Map.class);
+            String playerColor = (String) request.get("playerColor");
+            Object gameIdObject = request.get("gameID");
+            int gameId = ((Number) gameIdObject).intValue();
 
+            gameService.joinGame(authToken, playerColor, gameId);
+            context.status(200);
+            context.result("{}");
         } catch (IllegalArgumentException e) {
             context.status(400);
             context.result(gson.toJson(Map.of("message", "Error: bad request")));
+        } catch (SecurityException e) {
+            context.status(401);
+            context.result(gson.toJson(Map.of("message", "Error: unauthorized")));
+        } catch (IllegalStateException e) {
+            context.status(403);
+            context.result(gson.toJson(Map.of("message", "Error: already taken")));
         } catch (DataAccessException e) {
             context.status(500);
             context.result(gson.toJson(Map.of("message", "Error: " + e.getMessage())));
