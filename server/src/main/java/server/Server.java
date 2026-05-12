@@ -166,6 +166,9 @@ public class Server {
             Map<String, Object> request = gson.fromJson(context.body(), Map.class);
             String playerColor = (String) request.get("playerColor");
             Object gameIdObject = request.get("gameID");
+            if (gameIdObject == null) {
+                throw new IllegalArgumentException("bad request");
+            }
             int gameId = ((Number) gameIdObject).intValue();
 
             gameService.joinGame(authToken, playerColor, gameId);
