@@ -45,7 +45,7 @@ public class ClearServiceTest {
         Assertions.assertNull(dataAccess.getAuth(token));
         Assertions.assertTrue(dataAccess.listGames().isEmpty());
 
-        // try putting new data in db and testing if it is there
+        // try putting new data in db and testing if it is there maybe?
 
     }
 }

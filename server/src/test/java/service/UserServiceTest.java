@@ -34,30 +34,12 @@ public class UserServiceTest {
 
     @Test
     void registerFailure_duplicateUsername() throws DataAccessException {
-
-//        AuthData auth = userService.register(new UserData("JD", "password", "email@me.com"));
-//        String token1 = auth.authToken();
-//
-//        AuthData auth2 = userService.register(new UserData("JD", "password2", "email2@me.com"));
-//        String token2 = auth2.authToken();
-//
-//        Assertions.assertNull(dataAccess.getUser("JD"));
-//        Assertions.assertNull(dataAccess.getAuth(token2));
-
-//        Assertions.assertThrows(IllegalStateException.class());
-
-        // duplicate usernames
-
         // register a new user1
         userService.register(new UserData("JD", "password", "email@me.com"));
         // Assert assertThrows the exception
         Assertions.assertThrows(IllegalStateException.class, () ->
                 userService.register(new UserData("JD", "password2", "email2@me.com"))
         );
-                // register a user2
-
-        // missing fields
-        //
     }
 
     @Test
@@ -125,8 +107,6 @@ public class UserServiceTest {
 
     @Test
     void logoutFailure() throws DataAccessException {
-//        userService.logout("Fake Token");
-
         Assertions.assertThrows(SecurityException.class, () ->
                 userService.logout("Fake Token")
         );
