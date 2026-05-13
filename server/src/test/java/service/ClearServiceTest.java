@@ -29,13 +29,21 @@ public class ClearServiceTest {
         String token = auth.authToken();
 
         // assert that the data is in the database
+        Assertions.assertNotNull(dataAccess.getUser("JD"));
+        Assertions.assertNotNull(dataAccess.getAuth(token));
+
         // create game
+        gameService.createGame(token, "test game");
         // assert that game is in the database
+        Assertions.assertFalse(dataAccess.listGames().isEmpty());
 
         // do clear()
         clearService.clear();
 
         // assert that all the data is gone from database
+        Assertions.assertNull(dataAccess.getUser("JD"));
+        Assertions.assertNull(dataAccess.getAuth(token));
+        Assertions.assertTrue(dataAccess.listGames().isEmpty());
 
         // try putting new data in db and testing if it is there
 
