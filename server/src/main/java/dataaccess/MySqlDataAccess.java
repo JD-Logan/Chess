@@ -3,6 +3,7 @@ package dataaccess;
 import model.AuthData;
 import model.GameData;
 import model.UserData;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.Collection;
 import java.util.List;
@@ -58,9 +59,8 @@ public class MySqlDataAccess implements DataAccess {
         try (var conn = DatabaseManager.getConnection();
              var statement = conn.createStatement()) {
             statement.executeUpdate("DELETE FROM auth");
-            statement.executeUpdate("DELETE FROM users");
             statement.executeUpdate("DELETE FROM game");
-
+            statement.executeUpdate("DELETE FROM users");
         } catch (SQLException e) {
             throw new DataAccessException("Failed to clear db", e);
         }
@@ -68,12 +68,51 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public void createUser(UserData user) throws DataAccessException {
+        // INSERT INTO users (username, password, email) VALUES (?, ?, ?)
 
+        // String hashedPassword = BCrypt.hashpw(clearTextPassword, BCrypt.gensalt());
+        // String hashed= BCrypt.hashpw(user.password(), BCrypt.gensalt());
+
+        //Check if username is takekn
+        if (getUser(user.username()) != null) {
+            throw new DataAccessException("User already exists or username is taken");
+        }
+
+        String hashedPassword = BCrypt.hashpw(user.password(), BCrypt.gensalt());
+        String sql = "INSERT INTO users (username, password, email) VALUES (?, ?, ?)";
+
+        try (var conn = DatabaseManager.getConnection();
+             var ps = conn.prepareStatement(sql)) {
+            ps.setString(1, user.username());
+            ps.setString(2, hashedPassword);
+            ps.setString(3, user.email());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("failed to add user to db", e);
+        }
     }
 
     @Override
     public UserData getUser(String username) throws DataAccessException {
-        return null;
+        String sql = "SELECT username, password, email FROM users WHERE username = ?";
+
+        try (var conn = DatabaseManager.getConnection();
+            var ps = conn.prepareStatement(sql)) {
+            ps.setString(1, username);
+
+            try (var returnStatement = ps.executeQuery()) {
+                if (!returnStatement.next()) {
+                    return null;
+                }
+                return new UserData(
+                        returnStatement.getString("username"),
+                        returnStatement.getString("password"),
+                        returnStatement.getString("email")
+                );
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Failed to get user from db", e);
+        }
     }
 
     @Override
