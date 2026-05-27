@@ -18,4 +18,15 @@ public class DataAccessTests {
             Assertions.assertEquals(1, rs.getInt(1));
         }
     }
+
+    @Test
+    void mySqlDataAccessTableConstructor() throws DataAccessException {
+        new MySqlDataAccess();
+    }
+
+    @Test
+    void clearPositive() throws DataAccessException {
+        MySqlDataAccess dao = new MySqlDataAccess();
+        dao.clear();
+    }
 }

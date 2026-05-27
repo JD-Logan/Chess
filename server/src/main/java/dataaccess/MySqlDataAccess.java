@@ -10,7 +10,9 @@ import java.sql.SQLException;
 
 public class MySqlDataAccess implements DataAccess {
 
-    configureDatabase();
+    public MySqlDataAccess() throws DataAccessException {
+        configureDatabase();
+    }
 
     private void configureDatabase() throws DataAccessException {
         DatabaseManager.createDatabase();
@@ -24,7 +26,7 @@ public class MySqlDataAccess implements DataAccess {
                 )""";
 
         String createAuthTable = """
-                CREATE TABLE IF NOT EXISTS users (
+                CREATE TABLE IF NOT EXISTS auth (
                 authToken VARCHAR(255) NOT NULL,
                 username VARCHAR(255) NOT NULL,
                 PRIMARY KEY (authToken),
@@ -32,7 +34,7 @@ public class MySqlDataAccess implements DataAccess {
                 )""";
 
         String createGameTable = """
-                CREATE TABLE IF NOT EXISTS users (
+                CREATE TABLE IF NOT EXISTS game (
                 gameID INT NOT NULL AUTO_INCREMENT,
                 whiteUsername VARCHAR(255),
                 blackUsername VARCHAR(255),
@@ -40,11 +42,28 @@ public class MySqlDataAccess implements DataAccess {
                 game TEXT,
                 PRIMARY KEY (gameID)
                 )""";
+
+        try (var conn = DatabaseManager.getConnection();
+        var statement = conn.createStatement()) {
+            statement.executeUpdate(createUsersTable);
+            statement.executeUpdate(createAuthTable);
+            statement.executeUpdate(createGameTable);
+        } catch (SQLException e) {
+            throw new DataAccessException("failt to create tables in db", e);
+        }
     }
 
     @Override
     public void clear() throws DataAccessException {
+        try (var conn = DatabaseManager.getConnection();
+             var statement = conn.createStatement()) {
+            statement.executeUpdate("DELETE FROM auth");
+            statement.executeUpdate("DELETE FROM users");
+            statement.executeUpdate("DELETE FROM game");
 
+        } catch (SQLException e) {
+            throw new DataAccessException("Failed to clear db", e);
+        }
     }
 
     @Override
