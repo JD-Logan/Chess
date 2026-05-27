@@ -28,5 +28,8 @@ public class DataAccessTests {
     void clearPositive() throws DataAccessException {
         MySqlDataAccess dao = new MySqlDataAccess();
         dao.clear();
+        // bare minimum. will rewrite to check if inserting a user, then clearing, results in getUser being null
     }
+
+
 }
