@@ -8,6 +8,8 @@ import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.SQLDataException;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
 
 public class DataAccessTests {
 
@@ -100,6 +102,83 @@ public class DataAccessTests {
     void createGameSuccess() throws DataAccessException {
         GameData game = dao.createGame("Test Game Name");
 
+        Assertions.assertTrue(game.gameID() > 0);
+        Assertions.assertNull(game.whiteUsername());
+        Assertions.assertNull(game.blackUsername());
+        Assertions.assertEquals("Test Game Name", game.gameName());
+        Assertions.assertNull(game.game());
     }
+
+    @Test
+    void createGameFailure() {
+    }
+
+    @Test
+    void getGameSuccess() throws DataAccessException {
+        GameData fromClient = dao.createGame("Test Game");
+        GameData fromDB = dao.getGame(fromClient.gameID());
+
+        Assertions.assertNotNull(fromDB);
+        Assertions.assertEquals(fromClient.gameID(), fromDB.gameID());
+        Assertions.assertEquals("Test Game", fromDB.gameName());
+        Assertions.assertNull(fromDB.whiteUsername());
+        Assertions.assertNull(fromDB.blackUsername());
+    }
+
+    @Test
+    void getGameFailure() throws DataAccessException {
+        Assertions.assertNull(dao.getGame(9999999));
+    }
+
+    @Test
+    void listGamesSuccess() throws DataAccessException {
+        Collection<GameData> gamesEmpty = dao.listGames();
+
+        Assertions.assertTrue(gamesEmpty.isEmpty());
+
+        dao.createGame("one game");
+        dao.createGame("two games");
+        dao.createGame("three games");
+
+        Collection<GameData> gamesNotEmpty = dao.listGames();
+
+        Assertions.assertEquals(3, gamesNotEmpty.size());
+    }
+
+    @Test
+    void updateGameSuccess_whiteUsername() throws DataAccessException {
+        GameData freshGame = dao.createGame("Test Game");
+        GameData updatedGame = new GameData(
+                freshGame.gameID(),
+                "JD",
+                null,
+                freshGame.gameName(),
+                null
+        );
+        dao.updateGame(updatedGame);
+
+        GameData fromDB = dao.getGame(freshGame.gameID());
+        Assertions.assertEquals("JD", fromDB.whiteUsername());
+        Assertions.assertNull(fromDB.blackUsername());
+    }
+
+    @Test
+    void updateGameSuccess_BlackUsername() throws DataAccessException {
+        GameData freshGame = dao.createGame("Test Game");
+        GameData updatedGame = new GameData(
+                freshGame.gameID(),
+                null,
+                "Tay",
+                freshGame.gameName(),
+                null
+        );
+        dao.updateGame(updatedGame);
+
+        GameData fromDB = dao.getGame(freshGame.gameID());
+        Assertions.assertEquals("Tay", fromDB.blackUsername());
+        Assertions.assertNull(fromDB.whiteUsername());
+    }
+
+
 
 }

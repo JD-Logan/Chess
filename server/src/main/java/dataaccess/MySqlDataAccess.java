@@ -6,6 +6,7 @@ import model.UserData;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.sql.SQLException;
@@ -142,17 +143,79 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public GameData getGame(int gameID) throws DataAccessException {
-        return null;
+        String sql = """
+                SELECT gameID, whiteUsername, blackUsername, gameName, game
+                FROM game
+                WHERE gameID = ?""";
+
+        try (var conn = DatabaseManager.getConnection();
+        var ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, gameID);
+
+            try (var rs = ps.executeQuery()) {
+                if (!rs.next()) {
+                    return null;
+                }
+                return new GameData(
+                        rs.getInt("gameID"),
+                        rs.getString("whiteUsername"),
+                        rs.getString("blackUsername"),
+                        rs.getString("gameName"),
+                        null // leave for now??? weird thing to handle in the intermediate steps
+                );
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("faild to get game", e);
+        }
     }
 
     @Override
     public Collection<GameData> listGames() throws DataAccessException {
-        return List.of();
+        String sql = """
+                SELECT gameID, whiteUsername, blackUsername, gameName, game
+                FROM game
+                """;
+        Collection<GameData> games = new ArrayList<>();
+
+        try (var conn = DatabaseManager.getConnection();
+        var ps = conn.prepareStatement(sql);
+        var rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                games.add(new GameData(
+                        rs.getInt("gameID"),
+                        rs.getString("whiteUsername"),
+                        rs.getString("blackUsername"),
+                        rs.getString("gameName"),
+                        null // also leave blank for now?
+                ));
+            }
+            return games;
+        } catch (SQLException e) {
+            throw new DataAccessException("failed to list games", e);
+        }
     }
 
     @Override
     public void updateGame(GameData game) throws DataAccessException {
+        String sql = """
+                UPDATE game
+                SET whiteUsername = ?, blackUsername = ?, gameName = ?, game = ?
+                WHERE gameID = ?
+                """;
 
+        try (var conn = DatabaseManager.getConnection();
+        var ps = conn.prepareStatement(sql)) {
+            ps.setString(1, game.whiteUsername());
+            ps.setString(2, game.blackUsername());
+            ps.setString(3, game.gameName());
+            ps.setString(4, null); // temporary until i add persistance
+            ps.setInt(5, game.gameID());
+            ps.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new DataAccessException("failed to update game", e);
+        }
     }
 
     @Override
