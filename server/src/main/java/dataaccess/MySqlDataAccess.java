@@ -5,6 +5,7 @@ import model.GameData;
 import model.UserData;
 import org.mindrot.jbcrypt.BCrypt;
 
+import java.sql.Statement;
 import java.util.Collection;
 import java.util.List;
 import java.sql.SQLException;
@@ -117,7 +118,26 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public GameData createGame(String gameName) throws DataAccessException {
-        return null;
+        String sql = "INSERT INTO game (whiteUsername, blackUsername, gameName, game) Values (?, ?, ?, ?)";
+
+        try (var conn = DatabaseManager.getConnection();
+             var ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, null);
+            ps.setString(2, null);
+            ps.setString(3, gameName);
+            ps.setString(4, null);
+
+            ps.executeUpdate();
+            try (var keys = ps.getGeneratedKeys()) {
+                if (!keys.next()) {
+                    throw new DataAccessException("failed to generate or fetch gameID");
+                }
+                int gameID = keys.getInt(1);
+                return new GameData(gameID, null, null, gameName, null);
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("failed to create", e);
+        }
     }
 
     @Override
@@ -137,16 +157,53 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public AuthData createAuth(String username) throws DataAccessException {
-        return null;
+        String authToken = java.util.UUID.randomUUID().toString();
+        String sql = "Insert INTO auth (authToken, username) VALUES (?, ?)";
+
+        try (var conn = DatabaseManager.getConnection();
+        var ps = conn.prepareStatement(sql)) {
+            ps.setString(1, authToken);
+            ps.setString(2, username);
+            ps.executeUpdate();
+            return new AuthData(authToken, username);
+        } catch (SQLException e) {
+            throw new DataAccessException("Create auth failed");
+        }
     }
 
     @Override
     public AuthData getAuth(String authToken) throws DataAccessException {
-        return null;
+        String sql = "SELECT authToken, username FROM auth WHERE authToken = ?";
+
+        try (var conn = DatabaseManager.getConnection();
+        var ps = conn.prepareStatement(sql)) {
+            ps.setString(1, authToken);
+
+            try (var returnStatement = ps.executeQuery()) {
+                if (!returnStatement.next()) {
+                    return null;
+                }
+                return new AuthData(
+                        returnStatement.getString("authToken"),
+                        returnStatement.getString("username")
+                );
+            }
+
+        } catch (SQLException e) {
+            throw new DataAccessException("failed to get auth", e);
+        }
     }
 
     @Override
     public void deleteAuth(String authToken) throws DataAccessException {
+        String sql = "DELETE FROM auth WHERE authToken = ?";
 
+        try (var conn = DatabaseManager.getConnection();
+        var ps = conn.prepareStatement(sql)) {
+            ps.setString(1, authToken);
+            ps.executeUpdate();
+    } catch (SQLException e) {
+            throw new DataAccessException("deleteAuth failed");
+        }
     }
 }
