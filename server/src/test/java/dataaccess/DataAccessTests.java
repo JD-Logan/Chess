@@ -107,11 +107,15 @@ public class DataAccessTests {
         Assertions.assertNull(game.whiteUsername());
         Assertions.assertNull(game.blackUsername());
         Assertions.assertEquals("Test Game Name", game.gameName());
-        Assertions.assertNull(game.game());
+        Assertions.assertNotNull(game.game());
+//        Assertions.assertEquals(ChessGame.TeamColor.WHITE, game.game().getTeamTurn());
     }
 
     @Test
     void createGameFailure() {
+        Assertions.assertThrows(DataAccessException.class, () ->
+                dao.createGame(null)
+        );
     }
 
     @Test
@@ -154,7 +158,7 @@ public class DataAccessTests {
                 "JD",
                 null,
                 freshGame.gameName(),
-                null
+                freshGame.game()
         );
         dao.updateGame(updatedGame);
 
@@ -183,7 +187,26 @@ public class DataAccessTests {
     @Test
     void chessGamePersistance() throws DataAccessException {
         GameData freshGame = dao.createGame("test");
-//        ChessGame
+
+        Assertions.assertNotNull(freshGame.game());
+        Assertions.assertEquals(ChessGame.TeamColor.WHITE, freshGame.game().getTeamTurn());
+
+        GameData fromDB = dao.getGame(freshGame.gameID());
+
+        ChessGame gameBoard = fromDB.game();
+        gameBoard.setTeamTurn(ChessGame.TeamColor.BLACK);
+        GameData saveBoard = new GameData(
+                freshGame.gameID(),
+                freshGame.whiteUsername(),
+                freshGame.blackUsername(),
+                freshGame.gameName(),
+                gameBoard
+        );
+        dao.updateGame(saveBoard);
+
+        GameData updatedGame = dao.getGame(freshGame.gameID());
+        Assertions.assertNotNull(updatedGame.game());
+        Assertions.assertEquals(ChessGame.TeamColor.BLACK, updatedGame.game().getTeamTurn());
     }
 
 }

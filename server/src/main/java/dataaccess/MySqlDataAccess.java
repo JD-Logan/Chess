@@ -126,12 +126,14 @@ public class MySqlDataAccess implements DataAccess {
     public GameData createGame(String gameName) throws DataAccessException {
         String sql = "INSERT INTO game (whiteUsername, blackUsername, gameName, game) Values (?, ?, ?, ?)";
 
+        ChessGame newGame = new ChessGame();
+
         try (var conn = DatabaseManager.getConnection();
              var ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, null);
             ps.setString(2, null);
             ps.setString(3, gameName);
-            ps.setString(4, null);
+            ps.setString(4, serializeGame(newGame));
 
             ps.executeUpdate();
             try (var keys = ps.getGeneratedKeys()) {
@@ -139,7 +141,7 @@ public class MySqlDataAccess implements DataAccess {
                     throw new DataAccessException("failed to generate or fetch gameID");
                 }
                 int gameID = keys.getInt(1);
-                return new GameData(gameID, null, null, gameName, null);
+                return new GameData(gameID, null, null, gameName, newGame);
             }
         } catch (SQLException e) {
             throw new DataAccessException("failed to create", e);
