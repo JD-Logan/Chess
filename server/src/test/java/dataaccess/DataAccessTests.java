@@ -1,5 +1,6 @@
 package dataaccess;
 
+import chess.ChessGame;
 import model.AuthData;
 import model.GameData;
 import model.UserData;
@@ -179,6 +180,10 @@ public class DataAccessTests {
         Assertions.assertNull(fromDB.whiteUsername());
     }
 
-
+    @Test
+    void chessGamePersistance() throws DataAccessException {
+        GameData freshGame = dao.createGame("test");
+//        ChessGame
+    }
 
 }

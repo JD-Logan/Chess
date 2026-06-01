@@ -3,6 +3,7 @@ package server;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import dataaccess.MemoryDataAccess;
+import dataaccess.MySqlDataAccess;
 import model.AuthData;
 import model.GameData;
 import model.UserData;
@@ -25,13 +26,27 @@ import java.util.Objects;
 public class Server {
 
     private final Javalin javalin;
-    private final DataAccess dataAccess = new MemoryDataAccess();
-    private final ClearService clearService = new ClearService(dataAccess);
-    private final UserService userService = new UserService(dataAccess);
-    private final GameService gameService = new GameService(dataAccess);
+    private final DataAccess dataAccess;
+    private final ClearService clearService;
+    private final UserService userService;
+    private final GameService gameService;
     private final Gson gson = new Gson();
 
     public Server() {
+        try {
+            dataAccess = new MySqlDataAccess();
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
+        }
+
+//        dataAccess = new MemoryDataAccess();
+
+        clearService = new ClearService(dataAccess);
+        userService = new UserService(dataAccess);
+        gameService = new GameService(dataAccess);
+
+
+
         javalin = Javalin.create(config -> config.staticFiles.add("web"));
 
         javalin.get("/", this::serveIndex);

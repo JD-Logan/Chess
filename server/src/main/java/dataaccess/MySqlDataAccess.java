@@ -11,7 +11,12 @@ import java.util.Collection;
 import java.util.List;
 import java.sql.SQLException;
 
+import com.google.gson.Gson;
+import chess.ChessGame;
+
 public class MySqlDataAccess implements DataAccess {
+
+    private final Gson gson = new Gson();
 
     public MySqlDataAccess() throws DataAccessException {
         configureDatabase();
@@ -161,7 +166,7 @@ public class MySqlDataAccess implements DataAccess {
                         rs.getString("whiteUsername"),
                         rs.getString("blackUsername"),
                         rs.getString("gameName"),
-                        null // leave for now??? weird thing to handle in the intermediate steps
+                        deserializeGame(rs.getString("game"))
                 );
             }
         } catch (SQLException e) {
@@ -187,7 +192,7 @@ public class MySqlDataAccess implements DataAccess {
                         rs.getString("whiteUsername"),
                         rs.getString("blackUsername"),
                         rs.getString("gameName"),
-                        null // also leave blank for now?
+                        deserializeGame(rs.getString("game"))
                 ));
             }
             return games;
@@ -209,7 +214,7 @@ public class MySqlDataAccess implements DataAccess {
             ps.setString(1, game.whiteUsername());
             ps.setString(2, game.blackUsername());
             ps.setString(3, game.gameName());
-            ps.setString(4, null); // temporary until i add persistance
+            ps.setString(4, serializeGame(game.game()));
             ps.setInt(5, game.gameID());
             ps.executeUpdate();
 
@@ -268,5 +273,19 @@ public class MySqlDataAccess implements DataAccess {
     } catch (SQLException e) {
             throw new DataAccessException("deleteAuth failed");
         }
+    }
+
+    private String serializeGame(ChessGame game) {
+        if (game == null) {
+            return null;
+        }
+        return gson.toJson(game);
+    }
+
+    private ChessGame deserializeGame(String json) {
+        if (json == null) {
+            return null;
+        }
+        return gson.fromJson(json, ChessGame.class);
     }
 }
