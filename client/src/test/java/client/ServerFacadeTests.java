@@ -48,4 +48,14 @@ public class ServerFacadeTests {
         Assertions.assertNotNull(login.authToken());
         Assertions.assertEquals("JD", login.username());
     }
+
+    @Test
+    public void clearSuccess() throws Exception {
+        // check status 200
+    }
+
+    @Test
+    public void clearFailure() throws Exception {
+
+    }
 }
