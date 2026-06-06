@@ -41,10 +41,42 @@ public class ServerFacade {
 
     public void clear() throws Exception {
         makeRequest("DELETE", "/db", null, null);
+
+//        URI uri = URI.create(serverURL + "/db");
+//
+//        HttpRequest request = HttpRequest.newBuilder()
+//                .uri(uri)
+//                .method("DELETE", HttpRequest.BodyPublishers.noBody())
+//                .build();
+//
+//        HttpResponse<String> response = client.send(
+//                request,
+//                HttpResponse.BodyHandlers.ofString()
+//        );
+//
+//        int statusCode = response.statusCode();
+//        String body = response.body();
     }
 
     public record AuthResult(String username, String authToken) {}
 
+    public AuthResult register(String username, String password, String email) throws Exception {
+        var body = new UserData(username, password, email);
+        HttpResult result = makeRequest("POST", "/user", body, null);
+        if (result.statusCode() == 200) {
+            return gson.fromJson(result.body(), AuthResult.class);
+        }
 
+        return null;
+    }
+
+    public AuthResult login(String username, String password) throws Exception {
+        var body = new UserData(username, password, null);
+        HttpResult result = makeRequest("Post", "/session", body, null);
+        if (result.statusCode() == 200) {
+            return gson.fromJson(result.body(), AuthResult.class);
+        }
+        return null;
+    }
     //
 }
