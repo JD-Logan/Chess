@@ -1,12 +1,14 @@
 package client;
 
 import com.google.gson.Gson;
+import model.GameData;
 import model.UserData;
 
 import java.net.URI; //
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest; //
 import java.net.http.HttpResponse; //
+import java.util.ArrayList;
 
 public class ServerFacade {
     private final String serverUrl; // localhost:8080
@@ -40,7 +42,10 @@ public class ServerFacade {
     }
 
     public void clear() throws Exception {
-        makeRequest("DELETE", "/db", null, null);
+        HttpResult result = makeRequest("DELETE", "/db", null, null);
+        if (result.statusCode() != 200) {
+            throw new RuntimeException("clear() failed " + result.statusCode() + result.body());
+        }
 
 //        URI uri = URI.create(serverURL + "/db");
 //
@@ -67,18 +72,25 @@ public class ServerFacade {
             return gson.fromJson(result.body(), AuthResult.class);
         }
 
-        return null;
+        throw new RuntimeException("register() failed " + result.statusCode() + result.body());
     }
 
     public AuthResult login(String username, String password) throws Exception {
         var body = new UserData(username, password, null);
-        HttpResult result = makeRequest("Post", "/session", body, null);
+        HttpResult result = makeRequest("POST", "/session", body, null);
         if (result.statusCode() == 200) {
             return gson.fromJson(result.body(), AuthResult.class);
         }
-        return null;
+        throw new RuntimeException("login() failed " + result.statusCode() + result.body());
     }
     //
 
+    public record CreateGameRequest(String gameName) {}
+
+    public record CreateGameResult(int gameID) {}
+
+    public record JoinGameRequest(String playerColor, int gameID) {}
+
+    public record ListGamesResult(ArrayList<GameData> games) {}
 
 }

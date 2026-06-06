@@ -14,7 +14,7 @@ public class ServerFacadeTests {
     @BeforeAll
     public static void init() {
         server = new Server();
-        var port = server.run(0);
+        port = server.run(0);
         facade = new ServerFacade("localhost", port);
         System.out.println("Started test HTTP server on " + port);
     }
@@ -52,10 +52,12 @@ public class ServerFacadeTests {
     @Test
     public void clearSuccess() throws Exception {
         // check status 200
+        Assertions.assertDoesNotThrow(() -> facade.clear());
+        facade.register("JD", "password", "test@email.com");
     }
 
     @Test
     public void clearFailure() throws Exception {
-
+        // idk how to do this. or if it even makes sense
     }
 }
