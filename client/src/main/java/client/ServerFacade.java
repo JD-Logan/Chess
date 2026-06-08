@@ -85,12 +85,44 @@ public class ServerFacade {
     }
     //
 
+    public void logout(String authToken) throws Exception {
+        HttpResult result = makeRequest("DELETE", "/session", null, authToken);
+        if (result.statusCode() != 200) {
+            throw new RuntimeException("logout() failed " + result.statusCode() + result.body());
+        }
+    }
+
     public record CreateGameRequest(String gameName) {}
 
     public record CreateGameResult(int gameID) {}
 
+    public CreateGameResult createGame(String authToken, String gameName) throws Exception {
+        var body = new CreateGameRequest(gameName);
+        HttpResult result = makeRequest("POST", "/game", body, authToken);
+        if (result.statusCode() != 200) {
+            throw new RuntimeException("createGame() failed " + result.statusCode() + result.body());
+        }
+        return gson.fromJson(result.body(), CreateGameResult.class);
+    }
+
     public record JoinGameRequest(String playerColor, int gameID) {}
 
+    public void joinGame(String authToken, String playerColor, int gameID) throws Exception {
+        var body = new JoinGameRequest(playerColor, gameID);
+        HttpResult result = makeRequest("PUT", "/game", body, authToken);
+        if (result.statusCode() != 200) {
+            throw new RuntimeException("joinGame() failed " + result.statusCode() + result.body());
+        }
+    }
+
     public record ListGamesResult(ArrayList<GameData> games) {}
+
+    public ListGamesResult listGames(String authToken) throws Exception {
+        HttpResult result = makeRequest("GET", "/game", null, authToken);
+        if (result.statusCode() != 200) {
+            throw new RuntimeException("listGames() failed " + result.statusCode() + result.body());
+        }
+        return gson.fromJson(result.body(), ListGamesResult.class);
+    }
 
 }

@@ -60,4 +60,28 @@ public class ServerFacadeTests {
     public void clearFailure() throws Exception {
         // idk how to do this. or if it even makes sense
     }
+
+    @Test
+    void registerAndCreateAndListAndJoin() throws Exception {
+        ServerFacade.AuthResult auth = facade.register("JD", "password", "test@email.com");
+
+        ServerFacade.CreateGameResult testGame = facade.createGame(auth.authToken(), "test game");
+        Assertions.assertTrue(testGame.gameID()>0);
+
+        ServerFacade.ListGamesResult gameList = facade.listGames(auth.authToken());
+        Assertions.assertEquals(1, gameList.games().size());
+        Assertions.assertEquals("test game", gameList.games().getFirst().gameName());
+        Assertions.assertNull(gameList.games().getFirst().whiteUsername());
+
+        facade.joinGame(auth.authToken(), "WHITE", testGame.gameID());
+
+        ServerFacade.ListGamesResult gameListAfterJoin = facade.listGames(auth.authToken());
+        Assertions.assertEquals("JD", gameListAfterJoin.games().getFirst().whiteUsername());
+    }
+
+    @Test
+    void registerUnauthorizedBecauseDuplicate() throws Exception {
+        facade.register("JD", "password", "test@email.com");
+
+    }
 }
