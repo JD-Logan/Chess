@@ -83,5 +83,24 @@ public class ServerFacadeTests {
     void registerUnauthorizedBecauseDuplicate() throws Exception {
         facade.register("JD", "password", "test@email.com");
 
+        Assertions.assertThrows(RuntimeException.class, () ->
+                facade.register("JD", "differentPassword", "different@email.com")
+        );
+    }
+
+    @Test
+    void wrongLoginPassword() throws Exception {
+        facade.register("JD", "password", "test@email.com");
+
+        Assertions.assertThrows(RuntimeException.class, () ->
+                facade.login("JD", "wrongPassword")
+        );
+    }
+
+    @Test
+    void unauthorizedListGames() throws Exception {
+        Assertions.assertThrows(RuntimeException.class, () ->
+                facade.listGames("badToken")
+        );
     }
 }
