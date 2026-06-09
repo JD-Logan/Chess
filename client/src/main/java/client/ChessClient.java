@@ -25,12 +25,12 @@ public class ChessClient {
 
             try {
                 if (state == State.LOGGED_OUT) {
-                    if (handlePreLogin(input)) {
-                        return; // prelogin stuff
+                    if (!handlePreLogin(input)) {
+                        return; // prelogin stuff.return quits loop.
                     }
                 } else {
-                    if (handlePostLogin(input)) {
-                        // postlogin stuff
+                    if (!handlePostLogin(input)) {
+                        // postlogin stuff. returns false to stay inl oop
                     }
                 }
             } catch (Exception e) {
@@ -107,5 +107,32 @@ public class ChessClient {
         }
     }
 
+    private boolean handlePostLogin(String input) {
+        switch (input.toLowerCase()) {
+            case "help" -> printPostLoginHelp();
+            case "logout" -> logout();
+            default -> System.out.println("Unrecognized command. Type Help for options");
+        }
+        return true;
+    }
 
+    private void printPostLoginHelp() {
+        System.out.println("""
+                
+               logout - sign out of your account
+               help - show this menu again
+               """);
+    }
+
+    private void logout() {
+        try {
+            server.logout(authToken);
+            authToken = null;
+            username = null;
+            state = State.LOGGED_OUT;
+            System.out.println("You have successfully logged out.");
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
 }
