@@ -10,7 +10,7 @@ public class ChessClient {
     private String authToken;
     private enum State {
         LOGGED_OUT,
-        LOGGEN_IN
+        LOGGED_IN
     }
 
     public ChessClient(ServerFacade server) {
@@ -25,11 +25,11 @@ public class ChessClient {
 
             try {
                 if (state == State.LOGGED_OUT) {
-                    if () {
+                    if (handlePreLogin(input)) {
                         return; // prelogin stuff
                     }
                 } else {
-                    if () {
+                    if (handlePostLogin(input)) {
                         // postlogin stuff
                     }
                 }
@@ -54,14 +54,58 @@ public class ChessClient {
     }
 
     private void printPreLoginHelp() {
-
+        System.out.println("""
+                
+               register - create your account to sign in
+               login - sign in with your account
+               quit - leave the chess program
+               help - show this menu again
+               """);
     }
 
     private void register() {
-
+        System.out.print("Username: ");
+        String user = scanner.nextLine().trim();
+        System.out.print("Password: ");
+        String password = scanner.nextLine().trim();
+        System.out.print("Email: ");
+        String email = scanner.nextLine().trim();
+        
+        if (user.isEmpty() || password.isEmpty() || email.isEmpty()) {
+            System.out.println("Username, password and email are required fields.");
+            return;
+        }
+        try {
+            ServerFacade.AuthResult auth = server.register(user, password, email);
+            username = auth.username();
+            authToken = auth.authToken();
+            state = State.LOGGED_IN;
+            System.out.println("You have registered as " + username);
+        } catch (Exception e) {
+            System.out.println(e);
+        }
     }
 
     private void login() {
+        System.out.print("Username: ");
+        String user = scanner.nextLine().trim();
+        System.out.print("Password: ");
+        String password = scanner.nextLine().trim();
 
+        if (user.isEmpty() || password.isEmpty()) {
+            System.out.println("Username and password are required fields.");
+            return;
+        }
+        try {
+            ServerFacade.AuthResult auth = server.login(user, password);
+            username = auth.username();
+            authToken = auth.authToken();
+            state = State.LOGGED_IN;
+            System.out.println("You have logged in as " + username);
+        } catch (Exception e) {
+            System.out.println(e);
+        }
     }
+
+
 }
