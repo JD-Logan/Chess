@@ -4,14 +4,14 @@ import com.google.gson.Gson;
 import model.GameData;
 import model.UserData;
 
-import java.net.URI; //
+import java.net.URI;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest; //
-import java.net.http.HttpResponse; //
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.ArrayList;
 
 public class ServerFacade {
-    private final String serverUrl; // localhost:8080
+    private final String serverUrl;
     private final HttpClient client = HttpClient.newHttpClient();
     private final Gson gson = new Gson();
 
@@ -19,7 +19,7 @@ public class ServerFacade {
         this.serverUrl = "http://" + host + ":" + port;
     }
 
-    //
+
     private record HttpResult(int statusCode, String body) {}
 
     private HttpResult makeRequest(String method, String path, Object body, String authToken) throws Exception {
@@ -47,20 +47,6 @@ public class ServerFacade {
             throw new RuntimeException("clear() failed " + result.statusCode() + result.body());
         }
 
-//        URI uri = URI.create(serverURL + "/db");
-//
-//        HttpRequest request = HttpRequest.newBuilder()
-//                .uri(uri)
-//                .method("DELETE", HttpRequest.BodyPublishers.noBody())
-//                .build();
-//
-//        HttpResponse<String> response = client.send(
-//                request,
-//                HttpResponse.BodyHandlers.ofString()
-//        );
-//
-//        int statusCode = response.statusCode();
-//        String body = response.body();
     }
 
     public record AuthResult(String username, String authToken) {}
@@ -83,7 +69,7 @@ public class ServerFacade {
         }
         throw new RuntimeException("login() failed " + result.statusCode() + result.body());
     }
-    //
+
 
     public void logout(String authToken) throws Exception {
         HttpResult result = makeRequest("DELETE", "/session", null, authToken);
