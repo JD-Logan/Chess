@@ -1,10 +1,13 @@
 package client;
 
+import chess.ChessBoard;
 import chess.ChessGame;
 import model.GameData;
 
 import java.util.ArrayList;
 import java.util.Scanner;
+
+import ui.DrawChessBoard;
 
 public class ChessClient {
     private final ServerFacade server;
@@ -30,15 +33,15 @@ public class ChessClient {
             try {
                 if (state == State.LOGGED_OUT) {
                     if (!handlePreLogin(input)) {
-                        return; // prelogin stuff.return quits loop.
+                        return;
                     }
                 } else {
                     if (!handlePostLogin(input)) {
-                        return; // postlogin stuff. returns false to stay inl oop
+                        return;
                     }
                 }
             } catch (Exception e) {
-                System.out.println("Error " + e);
+                System.out.println(friendlyError(e));
             }
         }
     }
@@ -86,7 +89,7 @@ public class ChessClient {
             state = State.LOGGED_IN;
             System.out.println("You have registered as " + username);
         } catch (Exception e) {
-            System.out.println(e);
+            System.out.println(friendlyError(e));
         }
     }
 
@@ -107,7 +110,7 @@ public class ChessClient {
             state = State.LOGGED_IN;
             System.out.println("You have logged in as " + username);
         } catch (Exception e) {
-            System.out.println(e);
+            System.out.println(friendlyError(e));
         }
     }
 
@@ -122,7 +125,7 @@ public class ChessClient {
             case "create game" -> createGame();
             case "list games" -> listGames();
             case "play game" -> playGame();
-            case "watch game" -> watchGame();
+            case "watch game" -> ObserveGame();
 
             default -> System.out.println("Unrecognized command. Type Help for options");
         }
@@ -150,7 +153,10 @@ public class ChessClient {
             state = State.LOGGED_OUT;
             System.out.println("You have successfully logged out.");
         } catch (Exception e) {
-            System.out.println(e);
+            System.out.println(friendlyError(e));
+            authToken = null;
+            username = null;
+            state = State.LOGGED_OUT;
         }
     }
 
@@ -166,7 +172,7 @@ public class ChessClient {
             server.createGame(authToken, gameName);
             System.out.println("Game " + gameName + " created");
         } catch (Exception e) {
-            System.out.println(e);
+            System.out.println(friendlyError(e));
         }
     }
 
@@ -180,22 +186,25 @@ public class ChessClient {
                 System.out.println("There are no current games");
                 return;
             }
-
+            int i = 1;
             for (GameData game : gameList) {
                 System.out.printf("%d. %s | White: %s | Black: %s%n",
+                        i++,
                         game.gameName(),
-                        game.whiteUsername(),
-                        game.blackUsername());
+                        game.whiteUsername() == null ? "[none]" : game.whiteUsername(),
+                        game.blackUsername() == null ? "[none]": game.blackUsername());
             }
 
         } catch (Exception e) {
-            System.out.println(e);
-            throw new RuntimeException(e);
+            System.out.println(friendlyError(e));
         }
     }
 
     private void playGame() {
         listGames();
+        if (gameList.isEmpty()) {
+            return;
+        }
         System.out.print("Which game?: ");
         String line = scanner.nextLine().trim();
         int gameNum = 0;
@@ -203,6 +212,7 @@ public class ChessClient {
             gameNum = Integer.parseInt(line);
         } catch (Exception e) {
             System.out.println("Invalid game ID");
+            return;
         }
         if (gameNum < 1 || gameNum > gameList.size()) {
             System.out.println("Invalid game ID");
@@ -212,7 +222,7 @@ public class ChessClient {
         System.out.print("Join as White or Black: ");
         String color = scanner.nextLine().trim().toUpperCase();
         if (!color.equals("WHITE") && !color.equals("BLACK")) {
-            System.out.println("color ust be either WHITE or BLACK.");
+            System.out.println("color must be either WHITE or BLACK.");
             return;
         }
 
@@ -220,16 +230,16 @@ public class ChessClient {
         try {
             server.joinGame(authToken, color, game.gameID());
             ChessGame chessGame = game.game() != null ? game.game() : new ChessGame();
-            // func to draw the board
+            drawBoard(chessGame.getBoard(), color.equals("WHITE"));
         } catch (Exception e) {
-            System.out.println(e);
+            System.out.println(friendlyError(e));
         }
 
 
 
     }
 
-    private void watchGame() {
+    private void ObserveGame() {
         listGames();
         if (gameList.isEmpty()) {
             System.out.println("There are no games to watch");
@@ -243,6 +253,7 @@ public class ChessClient {
             gameNum = Integer.parseInt(line);
         } catch (Exception e) {
             System.out.println("Invalid game ID");
+            return;
         }
         if (gameNum < 1 || gameNum > gameList.size()) {
             System.out.println("Invalid game ID");
@@ -251,7 +262,29 @@ public class ChessClient {
 
         GameData game = gameList.get(gameNum -1);
         ChessGame chessGame = game.game() != null ? game.game() : new ChessGame();
-        // func to draw the board
+        drawBoard(chessGame.getBoard(), true);
 
+    }
+
+    private void drawBoard(ChessBoard board, boolean whiteOnBottom) {
+        DrawChessBoard.drawBoard(board, whiteOnBottom);
+    }
+
+    private String friendlyError(Exception e) {
+        String msg = e.getMessage();
+        if (msg == null) {
+            return "Failed request. please try again.";
+        }
+
+        int start = msg.indexOf("Error: ");
+        if (start >= 0) {
+            String rest = msg.substring(start + 7);
+            int end = rest.indexOf('"');
+            if (end >= 0) {
+                return rest.substring(0, end);
+            }
+            return rest.trim();
+        }
+        return "request failed";
     }
 }
