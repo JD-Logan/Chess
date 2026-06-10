@@ -57,8 +57,13 @@ public class ServerFacadeTests {
     }
 
     @Test
-    public void clearFailure() throws Exception {
-        // idk how to do this. or if it even makes sense
+    public void clearDeletesData() throws Exception {
+        ServerFacade.AuthResult auth = facade.register("JD", "password", "test@email.com");
+        facade.createGame(auth.authToken(), "game");
+        facade.clear();
+        Assertions.assertThrows(RuntimeException.class, () ->
+                facade.login("JD", "password")
+        );
     }
 
     @Test
@@ -89,6 +94,20 @@ public class ServerFacadeTests {
     }
 
     @Test
+    void createGameUnauthorizedFailure() {
+        Assertions.assertThrows(RuntimeException.class, () ->
+                facade.createGame("bad-token", "My Game")
+        );
+    }
+
+    @Test
+    void listGamesUnauthorizedFailure() {
+        Assertions.assertThrows(RuntimeException.class, () ->
+                facade.listGames("bad-token")
+        );
+    }
+
+    @Test
     void wrongLoginPassword() throws Exception {
         facade.register("JD", "password", "test@email.com");
 
@@ -98,9 +117,66 @@ public class ServerFacadeTests {
     }
 
     @Test
+    void loginSuccess() throws Exception {
+        facade.register("JD", "password", "test@email.com");
+        ServerFacade.AuthResult auth = facade.login("JD", "password");
+        Assertions.assertNotNull(auth.authToken());
+        Assertions.assertEquals("JD", auth.username());
+    }
+
+    @Test
     void unauthorizedListGames() throws Exception {
         Assertions.assertThrows(RuntimeException.class, () ->
                 facade.listGames("badToken")
         );
     }
+
+    @Test
+    void joinGameAlreadyTakenFailure() throws Exception {
+        ServerFacade.AuthResult auth = facade.register("JD", "password", "test@email.com");
+        ServerFacade.CreateGameResult game = facade.createGame(auth.authToken(), "full");
+        facade.joinGame(auth.authToken(), "WHITE", game.gameID());
+        Assertions.assertThrows(RuntimeException.class, () ->
+                facade.joinGame(auth.authToken(), "WHITE", game.gameID())
+        );
+    }
+
+    @Test
+    void logoutSuccess() throws Exception {
+        ServerFacade.AuthResult auth = facade.register("JD", "password", "test@email.com");
+        Assertions.assertDoesNotThrow(() -> facade.logout(auth.authToken()));
+    }
+    @Test
+    void logoutBadTokenFailure() {
+        Assertions.assertThrows(RuntimeException.class, () ->
+                facade.logout("not-a-real-token")
+        );
+    }
+
+    @Test
+    void createGameSuccess() throws Exception {
+        ServerFacade.AuthResult auth = facade.register("JD", "password", "test@email.com");
+        ServerFacade.CreateGameResult result = facade.createGame(auth.authToken(), "My Game");
+        Assertions.assertTrue(result.gameID() > 0);
+    }
+
+    @Test
+    void listGamesSuccess() throws Exception {
+        ServerFacade.AuthResult auth = facade.register("JD", "password", "test@email.com");
+        facade.createGame(auth.authToken(), "one");
+        facade.createGame(auth.authToken(), "two");
+        ServerFacade.ListGamesResult result = facade.listGames(auth.authToken());
+        Assertions.assertEquals(2, result.games().size());
+    }
+
+    @Test
+    void joinGameSuccess() throws Exception {
+        ServerFacade.AuthResult auth = facade.register("JD", "password", "test@email.com");
+        ServerFacade.CreateGameResult game = facade.createGame(auth.authToken(), "join me");
+        facade.joinGame(auth.authToken(), "WHITE", game.gameID());
+        ServerFacade.ListGamesResult list = facade.listGames(auth.authToken());
+        Assertions.assertEquals("JD", list.games().getFirst().whiteUsername());
+    }
+
+
 }

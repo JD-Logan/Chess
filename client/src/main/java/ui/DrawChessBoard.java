@@ -6,7 +6,7 @@ public class DrawChessBoard {
 
     private static void drawBottomWhite(ChessBoard board) {
         System.out.println(); // top border
-        System.out.println("    " + "  a  " + "  b  " + "  c  " + "  d  " + "  e  " + "  f  " + "  g  " + "  h  ");
+        System.out.println("" + "  a " + "  b " + "  c " + " d " + "  e " + "  f " + "  g " + " h ");
         for (int row = 8; row >= 1; row--) {
             System.out.printf("%d", row);
             for (int col =1; col <=8; col++) {
@@ -14,13 +14,13 @@ public class DrawChessBoard {
             }
             System.out.printf(" %d%n", row);
         }
-        System.out.println("    " + "  a  " + "  b  " + "  c  " + "  d  " + "  e  " + "  f  " + "  g  " + "  h  ");
+        System.out.println("" + "  a " + "  b " + "  c " + " d " + "  e " + "  f " + "  g " + " h ");
         System.out.println();
     }
 
     private static void drawBottomBlack(ChessBoard board) {
         System.out.println(); // top border
-        System.out.println("    " + "  h  " + "  g  " + "  f  " + "  e  " + "  d  " + "  c  " + "  b  " + "  a  ");
+        System.out.println("" + "  h " + "  g " + "  f " + " e " + "  d " + "  c " + "  b " + " a ");
         for (int row = 1; row <= 8; row++) {
             System.out.printf("%d", row);
             for (int col =8; col >=1; col--) {
@@ -28,7 +28,7 @@ public class DrawChessBoard {
             }
             System.out.printf(" %d%n", row);
         }
-        System.out.println("    " + "  h  " + "  g  " + "  f  " + "  e  " + "  d  " + "  c  " + "  b  " + "  a  ");
+        System.out.println("" + "  h " + "  g " + "  f " + " e " + "  d " + "  c " + "  b " + " a ");
         System.out.println();
     }
 
