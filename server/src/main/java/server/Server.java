@@ -46,7 +46,6 @@ public class Server {
         gameService = new GameService(dataAccess);
 
 
-
         javalin = Javalin.create(config -> config.staticFiles.add("web"));
 
         javalin.get("/", this::serveIndex);
@@ -58,6 +57,12 @@ public class Server {
         javalin.post("/game", this::handleCreateGame);
         javalin.put("/game", this::handleJoinGame);
 
+        WebSocketHandler webSocketHandler = new WebSocketHandler(dataAccess, gson);
+        javalin.ws("/ws", ws -> {
+            ws.onConnect(webSocketHandler::onConnect);
+            ws.onMessage(webSocketHandler::onMessage);
+            ws.onClose(webSocketHandler::onClose);
+        });
     }
 
     private void serveIndex(Context context) {
