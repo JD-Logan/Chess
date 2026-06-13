@@ -8,17 +8,30 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 import ui.DrawChessBoard;
+import websocket.messages.ServerMessage;
 
-public class ChessClient {
+public class ChessClient implements ServerMessageHandler {
     private final ServerFacade server;
     private final Scanner scanner = new Scanner(System.in);
     private State state = State.LOGGED_OUT;
     private String username;
     private String authToken;
+
+    @Override
+    public void onMessage(ServerMessage message) {
+
+    }
+
     private enum State {
         LOGGED_OUT,
-        LOGGED_IN
+        LOGGED_IN,
+        IN_GAME
     }
+
+    private WebSocketFacade ws;
+    private GameData currentGame;
+    private int currentGameID;
+    private ChessGame.TeamColor playerColor;
 
     public ChessClient(ServerFacade server) {
         this.server = server;
@@ -27,18 +40,22 @@ public class ChessClient {
     public void run() {
         System.out.println("Welcome to 240 chess. Type Help to get started.");
         while (true) {
-            System.out.print(state == State.LOGGED_OUT ? "[LOGGED_OUT] >>> " : "[LOGGED_IN] >>> ");
+            String prompt = switch (state) {
+                case LOGGED_OUT -> "[LOGGED_OUT] >>>";
+                case LOGGED_IN -> "[LOGGED_IN] >>>";
+                case IN_GAME -> "[IN_GAME] >>>";
+            };
+            System.out.print(prompt);
             String input = scanner.nextLine().trim();
 
             try {
-                if (state == State.LOGGED_OUT) {
-                    if (!handlePreLogin(input)) {
-                        return;
-                    }
-                } else {
-                    if (!handlePostLogin(input)) {
-                        return;
-                    }
+                boolean keepGoing = switch (state) {
+                    case LOGGED_OUT -> handlePreLogin(input);
+                    case LOGGED_IN -> handlePostLogin(input);
+                    case IN_GAME -> handleInGame(input);
+                };
+                if (!keepGoing) {
+                    return;
                 }
             } catch (Exception e) {
                 System.out.println(friendlyError(e));
@@ -143,6 +160,11 @@ public class ChessClient {
                play game - join a game
                watch game - watch a current game
                """);
+    }
+
+    private boolean handleInGame(String input) {
+        System.out.println("Gameplay not ready yet");
+        return true;
     }
 
     private void logout() {

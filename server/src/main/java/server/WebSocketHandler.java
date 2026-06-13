@@ -222,7 +222,10 @@ public class WebSocketHandler {
                 game = dataAccess.getGame(gameID);
                 ChessGame chessGame = game.game();
 
-
+                if (resignedGames.contains(gameID)) {
+                    sendError(ctx, "Error: game is already over");
+                    return;
+                }
 
                 if (isGameOver(chessGame)) {
                     sendError(ctx, "Error: game over");
