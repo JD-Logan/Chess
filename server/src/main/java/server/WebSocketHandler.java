@@ -17,11 +17,21 @@ import websocket.messages.ErrorMessage;
 import websocket.messages.LoadGameMessage;
 import websocket.messages.NotificationMessage;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 
 public class WebSocketHandler {
     private final DataAccess dataAccess;
     private final Gson gson;
     private final ConnectionManager connections = new ConnectionManager();
+    private final Object moveLock = new Object();
+
+    private final ConcurrentHashMap<Integer, Object> gameLocks = new ConcurrentHashMap<>();
+
+    private Object getGameLock(int gameID) {
+        return gameLocks.computeIfAbsent(gameID, ID -> new Object());
+    }
+
 
     public WebSocketHandler(DataAccess dataAccess, Gson gson) {
         this.dataAccess = dataAccess;
@@ -38,8 +48,55 @@ public class WebSocketHandler {
         switch (command.getCommandType()) {
             case CONNECT -> connect(command, ctx);
             case MAKE_MOVE -> makeMove(gson.fromJson(ctx.message(), MakeMoveCommand.class), ctx);
-            case LEAVE -> {}
+            case LEAVE -> leave(command, ctx);
             case RESIGN -> {}
+        }
+    }
+
+    private void leave(UserGameCommand command, WsMessageContext ctx) {
+        try {
+            AuthData auth = dataAccess.getAuth(command.getAuthToken());
+            if (auth == null) {
+                sendError(ctx, "Error: unauthorized");
+                return;
+            }
+            GameData game = dataAccess.getGame(command.getGameID());
+            if (game == null) {
+                sendError(ctx, "Error: bad request");
+                return;
+            }
+            String username = auth.username();
+            int gameID = command.getGameID();
+
+            synchronized (moveLock) {
+                game = dataAccess.getGame(gameID);
+                String white = game.whiteUsername();
+                String black = game.blackUsername();
+                if (username.equals(white) || username.equals(black)) {
+                    if (username.equals(white)) {
+                        white = null;
+                    }
+                    if (username.equals(black)) {
+                        black = null;
+                    }
+                    dataAccess.updateGame(new GameData(
+                            game.gameID(),
+                            white,
+                            black,
+                            game.gameName(),
+                            game.game()
+                    ));
+                }
+            }
+
+            connections.remove(ctx.sessionId());
+            connections.broadcastToGame(
+                    game.gameID(),
+                    gson.toJson(new NotificationMessage(username + " left the game"))
+            );
+
+        } catch (DataAccessException e) {
+            sendError(ctx, "Error: " + e.getMessage());
         }
     }
 
@@ -90,7 +147,7 @@ public class WebSocketHandler {
         return notification;
     }
 
-    private final Object moveLock = new Object();
+
 
     private void makeMove(MakeMoveCommand command, WsMessageContext ctx) {
         try {
