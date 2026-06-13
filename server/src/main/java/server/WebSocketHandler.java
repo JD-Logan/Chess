@@ -152,6 +152,10 @@ public class WebSocketHandler {
                 gson.toJson(new NotificationMessage(username + " made a move"))
         );
 
+        if (isCheckOrGameOver(updated.game())) {
+            connections.broadcastToGame(gameID, gson.toJson(new NotificationMessage(buildGameStatusMessage(updated.game()))));
+        }
+
     }
 
     private boolean isGameOver(ChessGame chessGame) {
@@ -159,6 +163,37 @@ public class WebSocketHandler {
                 chessGame.isInCheckmate(ChessGame.TeamColor.BLACK) ||
                 chessGame.isInStalemate(ChessGame.TeamColor.WHITE) ||
                 chessGame.isInStalemate(ChessGame.TeamColor.BLACK);
+    }
+
+    private boolean isCheckOrGameOver(ChessGame chessGame) {
+        return chessGame.isInCheck(ChessGame.TeamColor.WHITE)
+                || chessGame.isInStalemate(ChessGame.TeamColor.WHITE)
+                || chessGame.isInCheckmate(ChessGame.TeamColor.WHITE)
+                || chessGame.isInCheck(ChessGame.TeamColor.BLACK)
+                || chessGame.isInStalemate(ChessGame.TeamColor.BLACK)
+                || chessGame.isInCheckmate(ChessGame.TeamColor.BLACK);
+    }
+
+    private String buildGameStatusMessage(ChessGame chessGame) {
+        if (chessGame.isInCheck(ChessGame.TeamColor.WHITE)) {
+            return "WHITE is in check";
+        }
+        if (chessGame.isInStalemate(ChessGame.TeamColor.WHITE)) {
+            return "WHITE is in Stalemate";
+        }
+        if (chessGame.isInCheckmate(ChessGame.TeamColor.WHITE)) {
+            return "WHITE is in Checkmate";
+        }
+        if (chessGame.isInCheck(ChessGame.TeamColor.BLACK)) {
+            return "BLACK is in Check";
+        }
+        if (chessGame.isInStalemate(ChessGame.TeamColor.BLACK)) {
+            return "BLACK is in Stalemate";
+        }
+        if (chessGame.isInCheckmate(ChessGame.TeamColor.BLACK)) {
+            return "BLACK is in Checkmate";
+        }
+        return "game status has updated";
     }
 
 }
