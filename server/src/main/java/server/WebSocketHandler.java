@@ -1,5 +1,7 @@
 package server;
 
+import chess.ChessGame;
+import chess.InvalidMoveException;
 import com.google.gson.Gson;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
@@ -8,6 +10,7 @@ import io.javalin.websocket.WsConnectContext;
 import io.javalin.websocket.WsMessageContext;
 import model.AuthData;
 import model.GameData;
+import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
 import websocket.messages.ErrorMessage;
 import websocket.messages.LoadGameMessage;
@@ -33,14 +36,14 @@ public class WebSocketHandler {
 
         switch (command.getCommandType()) {
             case CONNECT -> connect(command, ctx);
-            case MAKE_MOVE -> {}
+            case MAKE_MOVE -> makeMove(gson.fromJson(ctx.message(), MakeMoveCommand.class), ctx);
             case LEAVE -> {}
             case RESIGN -> {}
         }
     }
 
     public void onClose(WsCloseContext ctx) {
-
+        connections.remove(ctx.sessionId());
     }
 
     private void sendError(WsMessageContext ctx, String message) {
@@ -63,14 +66,7 @@ public class WebSocketHandler {
             int gameID = command.getGameID();
             connections.add(ctx.sessionId(), username, gameID, ctx);
             connections.send(ctx.sessionId(), gson.toJson(new LoadGameMessage(game)));
-//            String notification = buildConnectNotification(username, game);
-            String notification = username + " connected as observer";
-            if (username.equals(game.whiteUsername())) {
-                notification = username + " connected as WHITE";
-            }
-            if (username.equals(game.blackUsername())) {
-                notification = username + " connected as BLACK";
-            }
+            String notification = buildConnectNotification(username, game);
 
             connections.broadcastToGameExcept(
                     gameID,
@@ -82,6 +78,87 @@ public class WebSocketHandler {
         }
     }
 
-    private String buildConnectNotification(String username, GameData game) {}
+    private String buildConnectNotification(String username, GameData game) {
+        String notification = username + " connected as observer";
+        if (username.equals(game.whiteUsername())) {
+            notification = username + " connected as WHITE";
+        }
+        if (username.equals(game.blackUsername())) {
+            notification = username + " connected as BLACK";
+        }
+        return notification;
+    }
+
+    private final Object moveLock = new Object();
+
+    private void makeMove(MakeMoveCommand command, WsMessageContext ctx) {
+        try {
+            AuthData auth = dataAccess.getAuth(command.getAuthToken());
+            if (auth == null) {
+                sendError(ctx, "Error: unauthorized");
+                return;
+            }
+            GameData game = dataAccess.getGame(command.getGameID());
+            if (game == null) {
+                sendError(ctx, "Error: bad request");
+                return;
+            }
+            String username = auth.username();
+            int gameID = command.getGameID();
+
+            if (!isPlayer(username, game)) {
+                sendError(ctx, "Error: observers cannot make moves");
+                return;
+            }
+
+            GameData updatedGame;
+            synchronized (moveLock) {
+                game = dataAccess.getGame(gameID);
+                ChessGame chessGame = game.game();
+                if (isGameOver(chessGame)) {
+                    sendError(ctx, "Error: game over");
+                    return;
+                }
+
+                chessGame.makeMove(command.getMove());
+                updatedGame = new GameData(
+                        game.gameID(),
+                        game.whiteUsername(),
+                        game.blackUsername(),
+                        game.gameName(),
+                        chessGame
+                );
+                dataAccess.updateGame(updatedGame);
+            }
+
+            broadcastAfterMove(gameID, ctx.sessionId(), username, updatedGame);
+
+        } catch (InvalidMoveException | DataAccessException e) {
+            sendError(ctx, "Error: " + e.getMessage());
+        }
+    }
+
+    private boolean isPlayer(String username, GameData game) {
+        return username.equals(game.whiteUsername()) || username.equals(game.blackUsername());
+    }
+
+    private void broadcastAfterMove(int gameID, String moverSessionID, String username, GameData updated) {
+        String loadJson = gson.toJson(new LoadGameMessage(updated));
+        connections.broadcastToGame(gameID, loadJson);
+
+        connections.broadcastToGameExcept(
+                gameID,
+                moverSessionID,
+                gson.toJson(new NotificationMessage(username + " made a move"))
+        );
+
+    }
+
+    private boolean isGameOver(ChessGame chessGame) {
+        return chessGame.isInCheckmate(ChessGame.TeamColor.WHITE) ||
+                chessGame.isInCheckmate(ChessGame.TeamColor.BLACK) ||
+                chessGame.isInStalemate(ChessGame.TeamColor.WHITE) ||
+                chessGame.isInStalemate(ChessGame.TeamColor.BLACK);
+    }
 
 }
