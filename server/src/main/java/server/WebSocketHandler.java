@@ -17,6 +17,7 @@ import websocket.messages.ErrorMessage;
 import websocket.messages.LoadGameMessage;
 import websocket.messages.NotificationMessage;
 
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -49,7 +50,54 @@ public class WebSocketHandler {
             case CONNECT -> connect(command, ctx);
             case MAKE_MOVE -> makeMove(gson.fromJson(ctx.message(), MakeMoveCommand.class), ctx);
             case LEAVE -> leave(command, ctx);
-            case RESIGN -> {}
+            case RESIGN -> resign(command, ctx);
+        }
+    }
+
+    private final Set<Integer> resignedGames = ConcurrentHashMap.newKeySet();
+
+    private void resign(UserGameCommand command, WsMessageContext ctx) {
+        try {
+            AuthData auth = dataAccess.getAuth(command.getAuthToken());
+            if (auth == null) {
+                sendError(ctx, "Error: unauthorized");
+                return;
+            }
+            GameData game = dataAccess.getGame(command.getGameID());
+            if (game == null) {
+                sendError(ctx, "Error: bad request");
+                return;
+            }
+            String username = auth.username();
+            int gameID = command.getGameID();
+
+            if (!isPlayer(username, game)) {
+                sendError(ctx, "Error: observers cannot resign from the game");
+                return;
+            }
+
+            if (resignedGames.contains(gameID)) {
+                sendError(ctx, "Error: game is already over");
+                return;
+            }
+
+
+            synchronized (getGameLock(gameID)) {
+                if (resignedGames.contains(gameID)) {
+                    sendError(ctx, "Error: game is already over");
+                    return;
+                }
+                resignedGames.add(gameID);
+                dataAccess.updateGame(game);
+            }
+
+            connections.broadcastToGame(
+                    game.gameID(),
+                    gson.toJson(new NotificationMessage(username + " resigned from the game"))
+            );
+
+        } catch (DataAccessException e) {
+            sendError(ctx, "Error: " + e.getMessage());
         }
     }
 
@@ -68,7 +116,7 @@ public class WebSocketHandler {
             String username = auth.username();
             int gameID = command.getGameID();
 
-            synchronized (moveLock) {
+            synchronized (getGameLock(gameID)) {
                 game = dataAccess.getGame(gameID);
                 String white = game.whiteUsername();
                 String black = game.blackUsername();
@@ -170,9 +218,12 @@ public class WebSocketHandler {
             }
 
             GameData updatedGame;
-            synchronized (moveLock) {
+            synchronized (getGameLock(gameID)) {
                 game = dataAccess.getGame(gameID);
                 ChessGame chessGame = game.game();
+
+
+
                 if (isGameOver(chessGame)) {
                     sendError(ctx, "Error: game over");
                     return;
