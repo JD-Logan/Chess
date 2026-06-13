@@ -1,6 +1,7 @@
 package server;
 
 import chess.ChessGame;
+import chess.ChessPiece;
 import chess.InvalidMoveException;
 import com.google.gson.Gson;
 import dataaccess.DataAccess;
@@ -117,6 +118,21 @@ public class WebSocketHandler {
                 ChessGame chessGame = game.game();
                 if (isGameOver(chessGame)) {
                     sendError(ctx, "Error: game over");
+                    return;
+                }
+
+                ChessGame.TeamColor playerColor = username.equals(game.whiteUsername())
+                        ? ChessGame.TeamColor.WHITE
+                        : ChessGame.TeamColor.BLACK;
+
+                ChessPiece piece = chessGame.getBoard().getPiece((command.getMove().getStartPosition()));
+                if (piece != null && piece.getTeamColor() != playerColor) {
+                    sendError(ctx, "Error: Cannot move your opponents pieces");
+                    return;
+                }
+
+                if (chessGame.getTeamTurn() != playerColor) {
+                    sendError(ctx, "Error: Not your turn");
                     return;
                 }
 
